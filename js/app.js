@@ -149,7 +149,7 @@ function bindEvents() {
   // Desktop Saison-Checkboxen (im Dropdown-Panel)
   document.querySelectorAll('#season-panel .season-cb').forEach(cb => {
     cb.addEventListener('change', () => {
-      activeSeasons = [...document.querySelectorAll('.season-cb:checked')].map(c => c.value)
+      activeSeasons = [...document.querySelectorAll('#season-panel .season-cb:checked')].map(c => c.value)
       updateFilterLabels()
       renderGrid()
     })
@@ -178,11 +178,6 @@ function bindEvents() {
   document.getElementById('filter-modal-overlay').addEventListener('click', closeFilterModal)
   document.getElementById('filter-modal-apply').addEventListener('click', applyFilterModal)
   document.getElementById('filter-modal-reset').addEventListener('click', resetFilterModal)
-
-  // Modal-Saison-Checkboxen synchron halten
-  document.querySelectorAll('#filter-modal .season-cb').forEach(cb => {
-    cb.addEventListener('change', syncSeasonCheckboxes)
-  })
 
   // Tag-Input im Formular
   const tagInput = document.getElementById('f-tag-input')
@@ -722,17 +717,6 @@ function populateModalTagGroup() {
   })
 }
 
-function syncSeasonCheckboxes() {
-  // Alle .season-cb mit gleichem value synchron halten (Desktop + Modal)
-  document.querySelectorAll('.season-cb').forEach(cb => {
-    const siblings = document.querySelectorAll(`.season-cb[value="${cb.value}"]`)
-    const anyChecked = [...siblings].some(s => s.checked)
-    siblings.forEach(s => s.checked = anyChecked)
-  })
-  activeSeasons = [...document.querySelectorAll('.season-cb:checked')].map(c => c.value)
-  updateFilterLabels()
-  renderGrid()
-}
 
 // ── Views ─────────────────────────────────────
 
