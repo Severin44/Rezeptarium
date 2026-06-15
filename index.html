@@ -58,8 +58,25 @@
 
   <div id="app-shell" class="shell" style="display:none">
 
+    <!-- ── Mobile Header ── -->
+    <header class="mobile-header">
+      <button class="burger-btn" id="burger-btn" aria-label="Menü öffnen">
+        <i class="ti ti-menu-2"></i>
+      </button>
+      <span class="mobile-title"><em>Rezeptarium</em></span>
+      <button class="mobile-add-btn" id="btn-add-mobile" aria-label="Rezept hinzufügen">
+        <i class="ti ti-plus"></i>
+      </button>
+    </header>
+
+    <!-- ── Overlay ── -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
     <!-- ── Sidebar ── -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-close" id="sidebar-close" aria-label="Menü schliessen">
+        <i class="ti ti-x"></i>
+      </button>
       <div class="sidebar-header">
         <div class="logo-books" aria-hidden="true">
           <svg width="64" height="44" viewBox="0 0 64 44" fill="none">
@@ -142,6 +159,32 @@
             <i class="ti ti-search" aria-hidden="true"></i>
             <input type="text" id="search-input" placeholder="Im Rezeptarium suchen…">
           </div>
+
+          <div class="filter-drop" id="season-drop">
+            <button class="filter-btn" id="season-btn" type="button">
+              <i class="ti ti-sun" aria-hidden="true"></i>
+              <span id="season-label">Saison</span>
+              <i class="ti ti-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="filter-panel" id="season-panel" hidden>
+              <label class="filter-opt"><input type="checkbox" value="Frühling"> 🌱 Frühling</label>
+              <label class="filter-opt"><input type="checkbox" value="Sommer"> ☀️ Sommer</label>
+              <label class="filter-opt"><input type="checkbox" value="Herbst"> 🍂 Herbst</label>
+              <label class="filter-opt"><input type="checkbox" value="Winter"> ❄️ Winter</label>
+            </div>
+          </div>
+
+          <div class="filter-drop" id="tag-drop">
+            <button class="filter-btn" id="tag-btn" type="button">
+              <i class="ti ti-tag" aria-hidden="true"></i>
+              <span id="tag-filter-label">Tags</span>
+              <i class="ti ti-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="filter-panel" id="tag-panel" hidden>
+              <p class="filter-empty" id="tag-panel-empty">Noch keine Tags vorhanden.</p>
+            </div>
+          </div>
+
           <select id="sort-select" class="sort-select">
             <option value="newest">Neueste zuerst</option>
             <option value="az">A – Z</option>
@@ -209,6 +252,26 @@
                 <option>Snack</option>
                 <option>Sonstiges</option>
               </select>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Saison</label>
+              <div class="season-check-group">
+                <label class="season-check"><input type="checkbox" class="f-season" value="Frühling"><span>🌱 Frühling</span></label>
+                <label class="season-check"><input type="checkbox" class="f-season" value="Sommer"><span>☀️ Sommer</span></label>
+                <label class="season-check"><input type="checkbox" class="f-season" value="Herbst"><span>🍂 Herbst</span></label>
+                <label class="season-check"><input type="checkbox" class="f-season" value="Winter"><span>❄️ Winter</span></label>
+              </div>
+            </div>
+            <div class="form-group" style="position:relative">
+              <label class="form-label">Tags</label>
+              <div class="tag-field" id="tag-field">
+                <div class="tag-pills-wrap" id="f-tag-pills"></div>
+                <input class="tag-text-input" type="text" id="f-tag-input" placeholder="Tag eingeben + Enter…" autocomplete="off">
+              </div>
+              <div class="tag-suggest-box" id="tag-suggest-box" hidden></div>
             </div>
           </div>
 

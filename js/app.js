@@ -7,6 +7,10 @@ let activeFilter = ''
 let searchQuery = ''
 let editingId = null
 let emptyStateEl = null
+let activeSeasons = []
+let activeTags = []
+let currentTags = []
+let eventsBound = false
 
 // ── Init ──────────────────────────────────────
 
@@ -83,6 +87,8 @@ function initQuote() {
 // ── Events ───────────────────────────────────
 
 function bindEvents() {
+  if (eventsBound) return
+  eventsBound = true
   emptyStateEl = document.getElementById('empty-state')
 
   // Navigation
@@ -132,9 +138,72 @@ function bindEvents() {
   // Sortierung
   document.getElementById('sort-select').addEventListener('change', renderGrid)
 
+  // Saison-Filter Dropdown
+  document.getElementById('season-btn').addEventListener('click', e => {
+    e.stopPropagation()
+    const panel = document.getElementById('season-panel')
+    const tagPanel = document.getElementById('tag-panel')
+    tagPanel.hidden = true
+    panel.hidden = !panel.hidden
+  })
+  document.querySelectorAll('#season-panel input').forEach(cb => {
+    cb.addEventListener('change', () => {
+      activeSeasons = [...document.querySelectorAll('#season-panel input:checked')].map(c => c.value)
+      updateFilterLabels()
+      renderGrid()
+    })
+  })
+
+  // Tag-Filter Dropdown
+  document.getElementById('tag-btn').addEventListener('click', e => {
+    e.stopPropagation()
+    const panel = document.getElementById('tag-panel')
+    const seasonPanel = document.getElementById('season-panel')
+    seasonPanel.hidden = true
+    panel.hidden = !panel.hidden
+  })
+
+  // Dropdowns schliessen bei Klick ausserhalb
+  document.addEventListener('click', () => {
+    document.getElementById('season-panel').hidden = true
+    document.getElementById('tag-panel').hidden = true
+  })
+  document.getElementById('season-drop').addEventListener('click', e => e.stopPropagation())
+  document.getElementById('tag-drop').addEventListener('click', e => e.stopPropagation())
+
+  // Tag-Input im Formular
+  const tagInput = document.getElementById('f-tag-input')
+  tagInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const val = tagInput.value.trim().replace(/,$/, '')
+      if (val && !currentTags.includes(val)) addFormTag(val)
+      tagInput.value = ''
+      document.getElementById('tag-suggest-box').hidden = true
+    } else if (e.key === 'Backspace' && !tagInput.value && currentTags.length) {
+      currentTags.pop()
+      renderFormTagPills()
+    }
+  })
+  tagInput.addEventListener('input', () => showTagSuggestions(tagInput.value))
+  tagInput.addEventListener('blur', () => {
+    setTimeout(() => { document.getElementById('tag-suggest-box').hidden = true }, 150)
+  })
+
   // Add-Buttons
   document.getElementById('btn-add-sidebar').addEventListener('click', openAddForm)
   document.getElementById('btn-add-main').addEventListener('click', openAddForm)
+  document.getElementById('btn-add-mobile').addEventListener('click', openAddForm)
+
+  // Mobile Burger
+  document.getElementById('burger-btn').addEventListener('click', openSidebar)
+  document.getElementById('sidebar-close').addEventListener('click', closeSidebar)
+  document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar)
+
+  // Sidebar auf Mobile schliessen wenn Nav-Item geklickt
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => { if (window.innerWidth <= 700) closeSidebar() })
+  })
 
   // Back
   document.getElementById('btn-back-detail').addEventListener('click', () => showView('grid'))
@@ -163,11 +232,88 @@ async function loadRecipes() {
   try {
     allRecipes = await getAllRecipes()
     updateCounts()
+    populateTagFilterPanel()
     renderGrid()
   } catch (e) {
     showToast('Fehler beim Laden der Rezepte.', 'error')
     console.error(e)
   }
+}
+
+// ── Tag-Filter Panel befüllen ─────────────────
+
+function populateTagFilterPanel() {
+  const panel = document.getElementById('tag-panel')
+  const empty = document.getElementById('tag-panel-empty')
+  const allTags = [...new Set(allRecipes.flatMap(r => r.tags || []))].sort()
+
+  if (!allTags.length) { empty.hidden = false; return }
+  empty.hidden = true
+
+  const existing = new Set([...panel.querySelectorAll('input')].map(i => i.value))
+  allTags.forEach(tag => {
+    if (existing.has(tag)) return
+    const label = document.createElement('label')
+    label.className = 'filter-opt'
+    const cb = document.createElement('input')
+    cb.type = 'checkbox'
+    cb.value = tag
+    if (activeTags.includes(tag)) cb.checked = true
+    cb.addEventListener('change', () => {
+      activeTags = [...panel.querySelectorAll('input:checked')].map(c => c.value)
+      updateFilterLabels()
+      renderGrid()
+    })
+    label.appendChild(cb)
+    label.append(' ' + tag)
+    panel.appendChild(label)
+  })
+}
+
+function updateFilterLabels() {
+  document.getElementById('season-label').textContent =
+    activeSeasons.length ? activeSeasons.join(', ') : 'Saison'
+  document.getElementById('tag-filter-label').textContent =
+    activeTags.length ? `Tags (${activeTags.length})` : 'Tags'
+}
+
+// ── Tag-Input Formular ────────────────────────
+
+function addFormTag(tag) {
+  currentTags.push(tag)
+  renderFormTagPills()
+}
+
+function removeFormTag(tag) {
+  currentTags = currentTags.filter(t => t !== tag)
+  renderFormTagPills()
+}
+
+function renderFormTagPills() {
+  document.getElementById('f-tag-pills').innerHTML =
+    currentTags.map(t =>
+      `<span class="form-tag-pill">${escHtml(t)}<button type="button" class="form-tag-x" onclick="removeFormTag('${escHtml(t).replace(/'/g, "\\'")}')">×</button></span>`
+    ).join('')
+}
+
+function showTagSuggestions(query) {
+  const box = document.getElementById('tag-suggest-box')
+  const q = query.trim().toLowerCase()
+  const allTags = [...new Set(allRecipes.flatMap(r => r.tags || []))]
+  const matches = allTags.filter(t => t.toLowerCase().includes(q) && !currentTags.includes(t))
+  if (!matches.length || !q) { box.hidden = true; return }
+  box.innerHTML = matches.map(t =>
+    `<div class="tag-suggest-item" onmousedown="pickTagSuggestion('${escHtml(t).replace(/'/g, "\\'")}')">
+      ${escHtml(t)}
+    </div>`
+  ).join('')
+  box.hidden = false
+}
+
+function pickTagSuggestion(tag) {
+  if (!currentTags.includes(tag)) addFormTag(tag)
+  document.getElementById('f-tag-input').value = ''
+  document.getElementById('tag-suggest-box').hidden = true
 }
 
 function updateCounts() {
@@ -188,11 +334,22 @@ function renderGrid() {
     list = list.filter(r => r.category === activeFilter)
   }
 
+  // Saison-Filter (OR: mindestens eine Saison muss passen)
+  if (activeSeasons.length) {
+    list = list.filter(r => activeSeasons.some(s => (r.seasons || []).includes(s)))
+  }
+
+  // Tag-Filter (AND: alle gewählten Tags müssen vorhanden sein)
+  if (activeTags.length) {
+    list = list.filter(r => activeTags.every(t => (r.tags || []).includes(t)))
+  }
+
   // Suche
   if (searchQuery) {
     list = list.filter(r =>
       r.name?.toLowerCase().includes(searchQuery) ||
-      r.ingredients?.toLowerCase().includes(searchQuery)
+      r.ingredients?.toLowerCase().includes(searchQuery) ||
+      (r.tags || []).some(t => t.toLowerCase().includes(searchQuery))
     )
   }
 
@@ -241,6 +398,7 @@ function recipeCardHTML(r) {
           ${r.cook_time ? `<span class="meta-item"><i class="ti ti-flame"></i>${r.cook_time} Min.</span>` : ''}
           ${r.servings  ? `<span class="meta-item"><i class="ti ti-users"></i>${r.servings}</span>` : ''}
         </div>
+        ${(r.tags && r.tags.length) ? `<div class="card-tags">${r.tags.slice(0, 3).map(t => `<span class="card-tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
       </div>
     </div>`
 }
@@ -297,7 +455,9 @@ function detailHTML(r) {
       ${totalPrep ? `<span class="chip"><i class="ti ti-clock"></i>${totalPrep}</span>` : ''}
       ${totalCook ? `<span class="chip"><i class="ti ti-flame"></i>${totalCook}</span>` : ''}
       ${r.servings  ? `<span class="chip"><i class="ti ti-users"></i>${r.servings} Portionen</span>` : ''}
+      ${(r.seasons || []).map(s => `<span class="chip chip-season">${seasonEmoji(s)} ${escHtml(s)}</span>`).join('')}
     </div>
+    ${(r.tags && r.tags.length) ? `<div class="detail-tags">${r.tags.map(t => `<span class="detail-tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
 
     <div class="ornament-rule"><div class="rule-line"></div><div class="rule-diamond"></div><div class="rule-line"></div></div>
 
@@ -330,6 +490,9 @@ function openAddForm() {
   document.getElementById('form-eyebrow').textContent = 'neuer Eintrag'
   document.getElementById('form-title').textContent = 'Rezept hinzufügen'
   document.getElementById('save-label').textContent = 'Eintragen'
+  document.querySelectorAll('.f-season').forEach(cb => { cb.checked = false })
+  currentTags = []
+  renderFormTagPills()
   showView('form')
 }
 
@@ -354,6 +517,11 @@ function openEditForm(r) {
     document.getElementById('upload-area').style.display = 'flex'
   }
 
+  document.querySelectorAll('.f-season').forEach(cb => {
+    cb.checked = (r.seasons || []).includes(cb.value)
+  })
+  currentTags = [...(r.tags || [])]
+  renderFormTagPills()
   document.getElementById('form-eyebrow').textContent = 'Eintrag bearbeiten'
   document.getElementById('form-title').textContent = r.name
   document.getElementById('save-label').textContent = 'Speichern'
@@ -388,6 +556,8 @@ async function handleSave(e) {
       instructions: document.getElementById('f-inst').value.trim() || null,
       notes:        document.getElementById('f-notes').value.trim() || null,
       cover_image_url: coverUrl,
+      seasons:      [...document.querySelectorAll('.f-season:checked')].map(c => c.value),
+      tags:         [...currentTags],
     }
 
     if (editingId) {
@@ -461,6 +631,20 @@ async function handleInstImg(e) {
   e.target.value = ''
 }
 
+// ── Mobile Sidebar ────────────────────────────
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open')
+  document.getElementById('sidebar-overlay').classList.add('show')
+  document.body.style.overflow = 'hidden'
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open')
+  document.getElementById('sidebar-overlay').classList.remove('show')
+  document.body.style.overflow = ''
+}
+
 // ── Views ─────────────────────────────────────
 
 function showView(name) {
@@ -495,6 +679,10 @@ function catEmoji(cat) {
     'Sonstiges':    '🌿',
   }
   return map[cat] || '🍽️'
+}
+
+function seasonEmoji(s) {
+  return { 'Frühling': '🌱', 'Sommer': '☀️', 'Herbst': '🍂', 'Winter': '❄️' }[s] || ''
 }
 
 function showToast(msg, type = 'success') {

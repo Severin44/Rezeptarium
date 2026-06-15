@@ -2,6 +2,7 @@
 
 /* ── Reset & Tokens ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 :root {
   --bg:           #F8F6F0;
@@ -559,12 +560,124 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast.error { background: #8a3a2e; }
 
+/* ── Mobile Header (immer im DOM, nur auf Mobile sichtbar) ── */
+.mobile-header { display: none; }
+.sidebar-close  { display: none; }
+.sidebar-overlay { display: none; }
+
 /* ── Responsive ── */
 @media (max-width: 700px) {
-  .shell { grid-template-columns: 1fr; }
-  .sidebar { position: static; height: auto; }
+
+  /* Shell: einspaltig, mobile-header als erste Zeile */
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 52px 1fr;
+  }
+
+  /* Mobile Top-Bar */
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    height: 52px;
+    background: var(--warm-pale);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 150;
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .burger-btn {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    color: var(--ink); font-size: 20px; border-radius: var(--radius);
+  }
+  .burger-btn:hover { background: var(--warm-mid); }
+  .mobile-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; color: var(--ink);
+  }
+  .mobile-title em { font-style: italic; color: var(--warm-dark); }
+  .mobile-add-btn {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--warm-dark); color: #f8f6f0;
+    border: none; border-radius: var(--radius); cursor: pointer; font-size: 18px;
+  }
+
+  /* Sidebar als Drawer */
+  .sidebar {
+    position: fixed;
+    top: 0; left: -260px;
+    width: 260px; height: 100vh;
+    z-index: 300;
+    transition: left .25s ease;
+    grid-row: 1 / span 2;
+    overflow-y: auto;
+  }
+  .sidebar.open { left: 0; }
+
+  /* Schliessen-Button in Sidebar */
+  .sidebar-close {
+    display: flex;
+    align-items: center; justify-content: center;
+    position: absolute; top: 10px; right: 10px;
+    width: 32px; height: 32px;
+    background: none; border: none;
+    font-size: 18px; color: var(--muted); cursor: pointer;
+    border-radius: var(--radius);
+  }
+  .sidebar-close:hover { background: var(--warm-mid); color: var(--ink); }
+
+  /* Overlay */
+  .sidebar-overlay {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(40,30,20,.45);
+    z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  .sidebar-overlay.show { opacity: 1; pointer-events: all; }
+
+  /* Main bekommt grid-row: 2 */
+  .main { grid-column: 1; grid-row: 2; }
+
+  /* Views */
+  .view { padding: 16px; }
+
+  /* Toolbar: horizontal scrollbar statt wrap */
+  .toolbar {
+    display: flex; flex-wrap: nowrap;
+    overflow-x: auto; gap: 8px; padding: 12px 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .toolbar::-webkit-scrollbar { display: none; }
+  .search-box { min-width: 150px; flex: 1; }
+  .filter-btn  { white-space: nowrap; }
+  .add-btn-inline { white-space: nowrap; flex-shrink: 0; }
+  /* Inline-Add-Button auf Mobile verstecken – haben oben rechts im Header */
+  .add-btn-inline { display: none; }
+
+  /* Rezept-Grid: eine Spalte */
+  .recipe-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Formular */
   .form-row-3 { grid-template-columns: 1fr 1fr; }
   .form-row-3 > :first-child { grid-column: 1/-1; }
+  .form-row-2 { grid-template-columns: 1fr; }
+
+  /* Detail-Aktionen stapeln */
+  .detail-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .detail-actions { flex-wrap: wrap; }
+
+  /* Banner etwas kompakter */
+  .banner { padding: 12px 14px; }
+  .quote-snoopy-img { width: 44px; }
 }
 
 /* ── Login ── */
@@ -611,3 +724,96 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
   text-align: left;
 }
 .login-card .form-group { text-align: left; margin-bottom: 12px; margin-top: 16px; }
+
+/* ── Filter Dropdowns ── */
+.filter-drop { position: relative; }
+.filter-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 0 12px; height: 36px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--card);
+  font-family: 'Lato', sans-serif; font-size: 13px; color: var(--ink);
+  cursor: pointer; white-space: nowrap;
+}
+.filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+.filter-btn.active { border-color: var(--primary); background: #f0f3e8; color: var(--primary-dark); }
+.filter-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 8px; min-width: 160px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.filter-opt {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: var(--radius);
+  font-size: 13px; color: var(--ink); cursor: pointer;
+}
+.filter-opt:hover { background: var(--bg); }
+.filter-opt input { accent-color: var(--primary); cursor: pointer; }
+.filter-empty { font-size: 12px; color: var(--muted); padding: 6px 8px; }
+
+/* ── form-row-2 ── */
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── Saison Checkboxen im Formular ── */
+.season-check-group { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.season-check { display: none; }
+.season-check input { display: none; }
+.season-check input + span {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 99px;
+  border: 1px solid var(--border); background: var(--card);
+  font-size: 12px; color: var(--ink); cursor: pointer;
+}
+.season-check input:checked + span {
+  background: #f0f3e8; border-color: var(--primary); color: var(--primary-dark); font-weight: 500;
+}
+.season-check { display: inline-block; }
+
+/* ── Tag-Field im Formular ── */
+.tag-field {
+  min-height: 40px; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 6px 8px; background: var(--card); cursor: text;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
+}
+.tag-field:focus-within { border-color: var(--primary); }
+.tag-pills-wrap { display: contents; }
+.form-tag-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #f0f3e8; border: 1px solid #c8d49a; border-radius: 99px;
+  padding: 2px 8px 2px 10px; font-size: 12px; color: var(--primary-dark);
+}
+.form-tag-x {
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  font-size: 14px; line-height: 1; padding: 0; margin: 0;
+}
+.form-tag-x:hover { color: var(--rose); }
+.tag-text-input {
+  border: none; outline: none; background: transparent;
+  font-family: 'Lato', sans-serif; font-size: 13px; color: var(--ink);
+  flex: 1; min-width: 120px;
+}
+.tag-suggest-box {
+  position: absolute; z-index: 100; background: var(--card);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,.08); overflow: hidden; margin-top: 2px;
+}
+.tag-suggest-item {
+  padding: 7px 12px; font-size: 13px; color: var(--ink); cursor: pointer;
+}
+.tag-suggest-item:hover { background: var(--bg); }
+
+/* ── Tags auf Karte ── */
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.card-tag {
+  font-size: 10px; padding: 1px 7px; border-radius: 99px;
+  background: #f0f3e8; color: var(--primary-dark); border: 1px solid #c8d49a;
+}
+
+/* ── Tags + Saison in Detail ── */
+.detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.detail-tag {
+  font-size: 12px; padding: 3px 10px; border-radius: 99px;
+  background: #f0f3e8; color: var(--primary-dark); border: 1px solid #c8d49a;
+}
+.chip-season { background: #eef3e0; border-color: #b8c878; }
