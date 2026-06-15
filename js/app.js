@@ -146,15 +146,16 @@ function bindEvents() {
     tagPanel.hidden = true
     panel.hidden = !panel.hidden
   })
-  document.querySelectorAll('#season-panel input').forEach(cb => {
+  // Desktop Saison-Checkboxen (im Dropdown-Panel)
+  document.querySelectorAll('#season-panel .season-cb').forEach(cb => {
     cb.addEventListener('change', () => {
-      activeSeasons = [...document.querySelectorAll('#season-panel input:checked')].map(c => c.value)
+      activeSeasons = [...document.querySelectorAll('.season-cb:checked')].map(c => c.value)
       updateFilterLabels()
       renderGrid()
     })
   })
 
-  // Tag-Filter Dropdown
+  // Tag-Filter Dropdown (Desktop)
   document.getElementById('tag-btn').addEventListener('click', e => {
     e.stopPropagation()
     const panel = document.getElementById('tag-panel')
@@ -170,6 +171,18 @@ function bindEvents() {
   })
   document.getElementById('season-drop').addEventListener('click', e => e.stopPropagation())
   document.getElementById('tag-drop').addEventListener('click', e => e.stopPropagation())
+
+  // Mobile Filter-Modal
+  document.getElementById('filter-modal-btn').addEventListener('click', openFilterModal)
+  document.getElementById('filter-modal-close').addEventListener('click', closeFilterModal)
+  document.getElementById('filter-modal-overlay').addEventListener('click', closeFilterModal)
+  document.getElementById('filter-modal-apply').addEventListener('click', applyFilterModal)
+  document.getElementById('filter-modal-reset').addEventListener('click', resetFilterModal)
+
+  // Modal-Saison-Checkboxen synchron halten
+  document.querySelectorAll('#filter-modal .season-cb').forEach(cb => {
+    cb.addEventListener('change', syncSeasonCheckboxes)
+  })
 
   // Tag-Input im Formular
   const tagInput = document.getElementById('f-tag-input')
@@ -233,6 +246,7 @@ async function loadRecipes() {
     allRecipes = await getAllRecipes()
     updateCounts()
     populateTagFilterPanel()
+    populateModalTagGroup()
     renderGrid()
   } catch (e) {
     showToast('Fehler beim Laden der Rezepte.', 'error')
@@ -275,6 +289,9 @@ function updateFilterLabels() {
     activeSeasons.length ? activeSeasons.join(', ') : 'Saison'
   document.getElementById('tag-filter-label').textContent =
     activeTags.length ? `Tags (${activeTags.length})` : 'Tags'
+  const total = activeSeasons.length + activeTags.length
+  document.getElementById('filter-modal-label').textContent =
+    total ? `Filter (${total})` : 'Filter'
 }
 
 // ── Tag-Input Formular ────────────────────────
@@ -643,6 +660,78 @@ function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open')
   document.getElementById('sidebar-overlay').classList.remove('show')
   document.body.style.overflow = ''
+}
+
+// ── Filter Modal (Mobile) ─────────────────────
+
+function openFilterModal() {
+  // Aktuellen State in Modal-UI spiegeln
+  document.querySelectorAll('#filter-modal .season-cb').forEach(cb => {
+    cb.checked = activeSeasons.includes(cb.value)
+  })
+  const sortVal = document.getElementById('sort-select').value
+  document.querySelectorAll('input[name="modal-sort"]').forEach(r => {
+    r.checked = r.value === sortVal
+  })
+  populateModalTagGroup()
+  document.getElementById('filter-modal').hidden = false
+  document.getElementById('filter-modal-overlay').hidden = false
+  document.body.style.overflow = 'hidden'
+}
+
+function closeFilterModal() {
+  document.getElementById('filter-modal').hidden = true
+  document.getElementById('filter-modal-overlay').hidden = true
+  document.body.style.overflow = ''
+}
+
+function applyFilterModal() {
+  // Saison
+  activeSeasons = [...document.querySelectorAll('#filter-modal .season-cb:checked')].map(c => c.value)
+  // Tags
+  activeTags = [...document.querySelectorAll('#modal-tag-group .modal-tag-pill.active')].map(el => el.dataset.tag)
+  // Sortierung
+  const sortVal = document.querySelector('input[name="modal-sort"]:checked')?.value || 'newest'
+  document.getElementById('sort-select').value = sortVal
+  updateFilterLabels()
+  renderGrid()
+  closeFilterModal()
+}
+
+function resetFilterModal() {
+  document.querySelectorAll('#filter-modal .season-cb').forEach(cb => cb.checked = false)
+  document.querySelectorAll('#modal-tag-group .modal-tag-pill').forEach(p => p.classList.remove('active'))
+  document.querySelector('input[name="modal-sort"][value="newest"]').checked = true
+}
+
+function populateModalTagGroup() {
+  const group = document.getElementById('modal-tag-group')
+  const empty = document.getElementById('modal-tag-empty')
+  const allTags = [...new Set(allRecipes.flatMap(r => r.tags || []))].sort()
+  if (!allTags.length) { empty.hidden = false; return }
+  empty.hidden = true
+  group.innerHTML = ''
+  allTags.forEach(tag => {
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'modal-tag-pill' + (activeTags.includes(tag) ? ' active' : '')
+    btn.dataset.tag = tag
+    btn.textContent = tag
+    btn.addEventListener('click', () => btn.classList.toggle('active'))
+    group.appendChild(btn)
+  })
+}
+
+function syncSeasonCheckboxes() {
+  // Alle .season-cb mit gleichem value synchron halten (Desktop + Modal)
+  document.querySelectorAll('.season-cb').forEach(cb => {
+    const siblings = document.querySelectorAll(`.season-cb[value="${cb.value}"]`)
+    const anyChecked = [...siblings].some(s => s.checked)
+    siblings.forEach(s => s.checked = anyChecked)
+  })
+  activeSeasons = [...document.querySelectorAll('.season-cb:checked')].map(c => c.value)
+  updateFilterLabels()
+  renderGrid()
 }
 
 // ── Views ─────────────────────────────────────
