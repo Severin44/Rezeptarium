@@ -6,33 +6,95 @@ let allRecipes = []
 let activeFilter = ''
 let searchQuery = ''
 let editingId = null
+let emptyStateEl = null
 
 // ── Init ──────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
-  initQuote()
-  bindEvents()
-  await loadRecipes()
+  const session = await getSession()
+  if (session) {
+    showApp()
+  } else {
+    showLoginScreen()
+  }
+
+  db.auth.onAuthStateChange((event, session) => {
+    if (session) showApp()
+    else showLoginScreen()
+  })
+
+  document.getElementById('btn-login').addEventListener('click', handleLogin)
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin()
+  })
 })
 
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim()
+  const password = document.getElementById('login-password').value
+  const btn = document.getElementById('btn-login')
+  const errorEl = document.getElementById('login-error')
+
+  errorEl.style.display = 'none'
+  btn.disabled = true
+  document.getElementById('login-label').textContent = 'Wird geladen…'
+
+  try {
+    await signIn(email, password)
+  } catch (e) {
+    errorEl.textContent = 'E-Mail oder Passwort falsch.'
+    errorEl.style.display = 'block'
+    btn.disabled = false
+    document.getElementById('login-label').textContent = 'Eintreten'
+  }
+}
+
+function showLoginScreen() {
+  document.getElementById('login-screen').style.display = 'block'
+  document.getElementById('app-shell').style.display = 'none'
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none'
+  document.getElementById('app-shell').style.display = 'grid'
+  initQuote()
+  bindEvents()
+  loadRecipes()
+}
+
+// ── Quote ────────────────────────────────────
+
 function initQuote() {
-  const quote = getDailyQuote()
+  const quote = getRandomQuote()
   document.getElementById('quote-text').textContent = `„${quote.text}"`
   document.getElementById('quote-meta').textContent = quote.from
 }
 
+
 // ── Events ───────────────────────────────────
 
 function bindEvents() {
+  emptyStateEl = document.getElementById('empty-state')
+
   // Navigation
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const filter = btn.dataset.filter
-      activeFilter = filter === 'favorite' ? '__fav__' : (filter || '')
+      console.log('Filter geklickt:', filter)
+
+      if (filter === 'favorite') {
+        activeFilter = '__fav__'
+      } else {
+        activeFilter = filter || ''
+      }
+
+      console.log('activeFilter gesetzt auf:', activeFilter)
+
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'))
       btn.classList.add('active')
-      renderGrid()
+
       showView('grid')
+      renderGrid()
     })
   })
 
@@ -130,7 +192,7 @@ function renderGrid() {
   else list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
   const grid = document.getElementById('recipe-grid')
-  const empty = document.getElementById('empty-state')
+  const empty = emptyStateEl
 
   if (list.length === 0) {
     grid.innerHTML = ''
@@ -392,7 +454,9 @@ async function handleInstImg(e) {
 // ── Views ─────────────────────────────────────
 
 function showView(name) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+  document.querySelectorAll('.view').forEach(v => {
+    v.classList.remove('active')
+  })
   document.getElementById(`view-${name}`).classList.add('active')
   window.scrollTo(0, 0)
 }

@@ -5,6 +5,24 @@
 const { createClient } = supabase
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
+// ── Auth ─────────────────────────────────────
+
+async function signIn(email, password) {
+  const { data, error } = await db.auth.signInWithPassword({ email, password })
+  if (error) throw error
+  return data
+}
+
+async function signOut() {
+  const { error } = await db.auth.signOut()
+  if (error) throw error
+}
+
+async function getSession() {
+  const { data } = await db.auth.getSession()
+  return data.session
+}
+
 // ── Rezepte ──────────────────────────────────
 
 async function getAllRecipes() {
