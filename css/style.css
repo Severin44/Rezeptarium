@@ -82,6 +82,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 }
 
 .snoopy-wrap { margin-top: 12px; display: flex; justify-content: center; }
+.snoopy-img { width: 80px; height: auto; }
 
 .sidebar-nav { flex: 1; padding: 8px 0; }
 
@@ -161,6 +162,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
   margin-bottom: 18px;
 }
 .banner-leaf { flex-shrink: 0; }
+.quote-snoopy-img { width: 56px; height: auto; }
 .banner-content { flex: 1; }
 .banner-quote {
   font-family: 'EB Garamond', serif;

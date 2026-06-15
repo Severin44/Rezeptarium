@@ -64,10 +64,19 @@ function showApp() {
 
 // ── Quote ────────────────────────────────────
 
+const SNOOPY_IMGS = Array.from({length: 24}, (_, i) =>
+  `assets/snoopy_svg/Untitled-1-${String(i + 2).padStart(2, '0')}.svg`
+)
+
+function getRandomSnoopyImg() {
+  return SNOOPY_IMGS[Math.floor(Math.random() * SNOOPY_IMGS.length)]
+}
+
 function initQuote() {
   const quote = getRandomQuote()
   document.getElementById('quote-text').textContent = `„${quote.text}"`
   document.getElementById('quote-meta').textContent = quote.from
+  document.getElementById('quote-snoopy').src = getRandomSnoopyImg()
 }
 
 
@@ -110,6 +119,7 @@ function bindEvents() {
       m.textContent = quote.from
       q.style.opacity = '1'
       m.style.opacity = '1'
+      document.getElementById('quote-snoopy').src = getRandomSnoopyImg()
     }, 250)
   })
 
