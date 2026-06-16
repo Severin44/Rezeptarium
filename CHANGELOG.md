@@ -7,13 +7,23 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 
 ## [Unreleased]
 
+## [1.0.0]
+
+### Added
+- Komplettes Refactoring auf Vue 3 (Composition API), Vite, Pinia und Vue Router; Supabase bleibt als Backend unverändert.
+- Neue Auth-Views: Registrierung, E-Mail-Verifizierung, Auth-Callback, Passwort-Reset-Anfrage und Passwort-Reset über Supabase Auth.
+- Logout-Button in der Sidebar.
+- Sichtbarer "Konto erstellen"-Button auf der Login-Seite (statt reinem Text-Link).
+
+### Changed
+- App-Struktur in Komponenten (`AppSidebar`, `QuoteBanner`, `RecipeCard`, `TagInput`, `SeasonPicker`) und Views (Grid/Detail/Form) aufgeteilt; globaler State liegt jetzt in einem Pinia-Store statt in losen Modulvariablen.
+- Statische Assets liegen neu unter `public/assets`.
+
 ### Fixed
 - Schrittbilder in der Zubereitung werden wieder angezeigt: `renderInstructions()` erkennt direkt gespeicherte `https://`-URLs, ohne sie in `imageUrls` nachzuschlagen.
 - `TypeError` beim Laden des Tag-Filters im mobilen Filter-Modal behoben, falls die zugehörigen DOM-Elemente noch nicht existieren.
 - Saison-Filter im mobilen Filter-Modal lässt sich jetzt wieder abwählen.
 - Der mobile "Filter"-Button ist nun korrekt nur in der Handy-Ansicht sichtbar.
-
-### Changed
 - Schrittbilder werden auf Desktop nur noch in 50% Breite angezeigt; in der mobilen Ansicht bleibt die volle Breite erhalten.
 
 ## [0.3.0]

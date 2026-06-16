@@ -1,31 +1,61 @@
 // ─────────────────────────────────────────────
 //  Datenbank-Schicht (Supabase)
 // ─────────────────────────────────────────────
+import { createClient } from '@supabase/supabase-js'
 
-const { createClient } = supabase
-const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://xlvwngiaaprnewndxnjd.supabase.co/'
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsdnduZ2lhYXBybmV3bmR4bmpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1Mzg5NzAsImV4cCI6MjA5NzExNDk3MH0.EQM0P0DufhkhTs4rUevROs4-yiz1MexTA7CPNE6PWPA'
+
+export const STORAGE_BUCKET = 'recipe-images'
+export const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 // ── Auth ─────────────────────────────────────
 
-async function signIn(email, password) {
+export async function signIn(email, password) {
   const { data, error } = await db.auth.signInWithPassword({ email, password })
   if (error) throw error
   return data
 }
 
-async function signOut() {
+export async function signUp(email, password) {
+  const { data, error } = await db.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+  })
+  if (error) throw error
+  return data
+}
+
+export async function signOut() {
   const { error } = await db.auth.signOut()
   if (error) throw error
 }
 
-async function getSession() {
+export async function getSession() {
   const { data } = await db.auth.getSession()
   return data.session
 }
 
+export function onAuthStateChange(cb) {
+  return db.auth.onAuthStateChange((event, session) => cb(event, session))
+}
+
+export async function requestPasswordReset(email) {
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  })
+  if (error) throw error
+}
+
+export async function updatePassword(password) {
+  const { error } = await db.auth.updateUser({ password })
+  if (error) throw error
+}
+
 // ── Rezepte ──────────────────────────────────
 
-async function getAllRecipes() {
+export async function getAllRecipes() {
   const { data, error } = await db
     .from('recipes')
     .select('*')
@@ -34,7 +64,7 @@ async function getAllRecipes() {
   return data
 }
 
-async function getRecipeById(id) {
+export async function getRecipeById(id) {
   const { data, error } = await db
     .from('recipes')
     .select('*')
@@ -44,7 +74,7 @@ async function getRecipeById(id) {
   return data
 }
 
-async function insertRecipe(recipe) {
+export async function insertRecipe(recipe) {
   const { data, error } = await db
     .from('recipes')
     .insert(recipe)
@@ -54,7 +84,7 @@ async function insertRecipe(recipe) {
   return data
 }
 
-async function updateRecipe(id, fields) {
+export async function updateRecipe(id, fields) {
   const { data, error } = await db
     .from('recipes')
     .update(fields)
@@ -65,7 +95,7 @@ async function updateRecipe(id, fields) {
   return data
 }
 
-async function deleteRecipe(id) {
+export async function deleteRecipe(id) {
   const { error } = await db
     .from('recipes')
     .delete()
@@ -73,13 +103,13 @@ async function deleteRecipe(id) {
   if (error) throw error
 }
 
-async function toggleFavorite(id, current) {
+export async function toggleFavorite(id, current) {
   return updateRecipe(id, { is_favorite: !current })
 }
 
 // ── Bilder (Storage) ─────────────────────────
 
-async function uploadImage(file, path) {
+export async function uploadImage(file, path) {
   const { data, error } = await db.storage
     .from(STORAGE_BUCKET)
     .upload(path, file, { upsert: true })
@@ -87,13 +117,13 @@ async function uploadImage(file, path) {
   return getImageUrl(data.path)
 }
 
-function getImageUrl(path) {
+export function getImageUrl(path) {
   const { data } = db.storage
     .from(STORAGE_BUCKET)
     .getPublicUrl(path)
   return data.publicUrl
 }
 
-async function deleteImage(path) {
+export async function deleteImage(path) {
   await db.storage.from(STORAGE_BUCKET).remove([path])
 }

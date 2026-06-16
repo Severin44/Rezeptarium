@@ -4,7 +4,7 @@
 //  → { text: "...", from: "..." }
 // ─────────────────────────────────────────────
 
-const QUOTES = [
+export const QUOTES = [
   {
     text: "Kochen ist Liebe, die man essen kann.",
     from: "ein kleiner Gruss von Sevi 🐶"
@@ -39,11 +39,11 @@ const QUOTES = [
   },
 ]
 
-function getRandomQuote() {
+export function getRandomQuote() {
   return QUOTES[Math.floor(Math.random() * QUOTES.length)]
 }
 
-function getDailyQuote() {
+export function getDailyQuote() {
   const day = new Date().getDate()
   return QUOTES[day % QUOTES.length]
 }
