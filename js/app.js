@@ -480,7 +480,7 @@ function detailHTML(r) {
 
     <section class="detail-section">
       <h3 class="sec-title">Zubereitung</h3>
-      <div class="inst-content">${renderInstructions(r.instructions)}</div>
+      <div class="inst-content">${renderInstructions(r.instructions, {})}</div>
     </section>
 
     ${r.notes ? `

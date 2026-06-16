@@ -81,7 +81,7 @@ function renderInstructions(text, imageUrls = {}) {
     if (imgMatch) {
       flushText()
       const key = imgMatch[1]
-      const src = imageUrls[key]
+      const src = key.startsWith('http') ? key : imageUrls[key]
       if (src) {
         html += `<img src="${escHtml(src)}" class="inst-img" alt="Schritt-Bild" loading="lazy">`
       } else {
