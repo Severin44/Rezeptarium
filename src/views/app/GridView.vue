@@ -48,6 +48,16 @@
         <option value="time">Schnellste zuerst</option>
       </select>
 
+      <div v-if="authStore.isAdmin" class="admin-toggle-group desktop-only">
+        <button class="filter-btn" :class="{ active: store.viewMode === 'mine' }" type="button" @click="setViewMode('mine')">Nur meine</button>
+        <button class="filter-btn" :class="{ active: store.viewMode === 'all' }" type="button" @click="setViewMode('all')">Alle Rezepte</button>
+      </div>
+
+      <select v-if="authStore.isAdmin" class="sort-select desktop-only" v-model="filterUserId">
+        <option value="">Alle User</option>
+        <option v-for="p in authStore.profiles" :key="p.id" :value="p.id">{{ p.username }}</option>
+      </select>
+
       <button class="filter-btn mobile-only" type="button" @click="openFilterModal">
         <i class="ti ti-adjustments-horizontal" aria-hidden="true"></i>
         <span>{{ filterModalLabel }}</span>
@@ -106,6 +116,7 @@
     <div class="recipe-grid">
       <RecipeCard
         v-for="r in store.filteredList" :key="r.id" :recipe="r"
+        :creator-name="authStore.isAdmin ? authStore.usernameById(r.user_id) : ''"
         @click="router.push(`/recipe/${r.id}`)"
       />
       <div v-if="!store.filteredList.length" class="empty-state">
@@ -128,11 +139,19 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRecipeStore } from '../../stores/recipes'
+import { useAuthStore } from '../../stores/auth'
 import QuoteBanner from '../../components/QuoteBanner.vue'
 import RecipeCard from '../../components/RecipeCard.vue'
 
 const router = useRouter()
 const store = useRecipeStore()
+const authStore = useAuthStore()
+
+const filterUserId = computed({
+  get: () => store.filterUserId,
+  set: v => store.setFilterUserId(v),
+})
+function setViewMode(mode) { store.setViewMode(mode) }
 
 const SEASONS = [
   { value: 'Frühling', emoji: '🌱' },
@@ -202,5 +221,8 @@ function resetFilterModal() {
   modalSort.value = 'newest'
 }
 
-onMounted(() => { if (!store.loaded) store.load() })
+onMounted(async () => {
+  if (!authStore.loaded) await authStore.load()
+  if (!store.loaded) await store.load()
+})
 </script>

@@ -8,6 +8,10 @@
       <div v-if="error" class="login-error">{{ error }}</div>
 
       <div class="form-group">
+        <label class="form-label" for="reg-username">Benutzername</label>
+        <input class="form-input" type="text" id="reg-username" v-model="username" placeholder="fabienne">
+      </div>
+      <div class="form-group">
         <label class="form-label" for="reg-email">E-Mail</label>
         <input class="form-input" type="email" id="reg-email" v-model="email" placeholder="fabienne@beispiel.ch">
       </div>
@@ -33,6 +37,7 @@ import { useRouter } from 'vue-router'
 import { signUp } from '../../lib/supabase'
 
 const router = useRouter()
+const username = ref('')
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -40,9 +45,10 @@ const error = ref('')
 
 async function register() {
   error.value = ''
+  if (!username.value.trim()) { error.value = 'Bitte einen Benutzernamen eingeben.'; return }
   loading.value = true
   try {
-    await signUp(email.value.trim(), password.value)
+    await signUp(email.value.trim(), password.value, username.value.trim())
     router.push('/verify-email')
   } catch (e) {
     error.value = e.message || 'Konto konnte nicht erstellt werden.'

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { getSession } from '../lib/supabase'
+import { getSession, getProfile } from '../lib/supabase'
 
 import LoginView from '../views/auth/LoginView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
@@ -11,6 +11,7 @@ import ResetPasswordView from '../views/auth/ResetPasswordView.vue'
 import GridView from '../views/app/GridView.vue'
 import DetailView from '../views/app/DetailView.vue'
 import FormView from '../views/app/FormView.vue'
+import QuotesAdminView from '../views/admin/QuotesAdminView.vue'
 
 const routes = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
@@ -24,6 +25,7 @@ const routes = [
   { path: '/recipe/:id', name: 'detail', component: DetailView, meta: { requiresAuth: true } },
   { path: '/add', name: 'add', component: FormView, meta: { requiresAuth: true } },
   { path: '/edit/:id', name: 'edit', component: FormView, meta: { requiresAuth: true } },
+  { path: '/admin/quotes', name: 'admin-quotes', component: QuotesAdminView, meta: { requiresAuth: true, requiresAdmin: true } },
 ]
 
 const router = createRouter({
@@ -35,6 +37,10 @@ router.beforeEach(async (to) => {
   const session = await getSession()
   if (to.meta.requiresAuth && !session) return { name: 'login' }
   if (session && (to.name === 'login' || to.name === 'register')) return { name: 'grid' }
+  if (to.meta.requiresAdmin) {
+    const profile = await getProfile(session.user.id)
+    if (!profile?.is_admin) return { name: 'grid' }
+  }
   return true
 })
 

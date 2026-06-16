@@ -6,6 +6,7 @@ import {
   deleteRecipe,
   toggleFavorite as toggleFavoriteApi,
 } from '../lib/supabase'
+import { useAuthStore } from './auth'
 
 export const useRecipeStore = defineStore('recipes', {
   state: () => ({
@@ -16,6 +17,8 @@ export const useRecipeStore = defineStore('recipes', {
     activeSeasons: [],
     activeTags: [],
     sortOrder: 'newest',
+    viewMode: 'mine', // 'mine' | 'all' — nur für Admins relevant
+    filterUserId: '', // Admin: auf bestimmten User filtern
   }),
 
   getters: {
@@ -63,11 +66,19 @@ export const useRecipeStore = defineStore('recipes', {
 
   actions: {
     async load() {
-      this.all = await getAllRecipes()
+      const auth = useAuthStore()
+      // Admin: "Nur meine" oder Filter auf einen bestimmten User anwenden.
+      // RLS liefert Nicht-Admins ohnehin nur die eigenen Rezepte.
+      let userId = ''
+      if (auth.isAdmin) {
+        userId = this.filterUserId || (this.viewMode === 'mine' ? auth.userId : '')
+      }
+      this.all = await getAllRecipes(userId ? { userId } : {})
       this.loaded = true
     },
     async add(payload) {
-      await insertRecipe(payload)
+      const auth = useAuthStore()
+      await insertRecipe({ ...payload, user_id: auth.userId })
       await this.load()
     },
     async edit(id, payload) {
@@ -87,5 +98,14 @@ export const useRecipeStore = defineStore('recipes', {
     setSeasons(arr) { this.activeSeasons = arr },
     setTags(arr) { this.activeTags = arr },
     setSort(v) { this.sortOrder = v },
+    async setViewMode(mode) {
+      this.viewMode = mode
+      this.filterUserId = ''
+      await this.load()
+    },
+    async setFilterUserId(id) {
+      this.filterUserId = id
+      await this.load()
+    },
   },
 })

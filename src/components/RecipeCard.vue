@@ -15,6 +15,7 @@
       <div v-if="recipe.tags && recipe.tags.length" class="card-tags">
         <span v-for="t in recipe.tags.slice(0, 3)" :key="t" class="card-tag">{{ t }}</span>
       </div>
+      <div v-if="creatorName" class="card-creator"><i class="ti ti-user"></i>{{ creatorName }}</div>
     </div>
   </div>
 </template>
@@ -22,7 +23,10 @@
 <script setup>
 import { computed } from 'vue'
 
-const props = defineProps({ recipe: { type: Object, required: true } })
+const props = defineProps({
+  recipe: { type: Object, required: true },
+  creatorName: { type: String, default: '' },
+})
 defineEmits(['click'])
 
 const CAT_COLORS = {

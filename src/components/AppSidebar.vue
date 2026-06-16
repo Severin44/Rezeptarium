@@ -50,6 +50,13 @@
       >
         <i :class="`ti ti-${cat.icon}`"></i>{{ cat.label }}
       </button>
+
+      <template v-if="authStore.isAdmin">
+        <p class="nav-section">Verwaltung</p>
+        <button class="nav-item" @click="goAdminQuotes">
+          <i class="ti ti-quote"></i>Zitate
+        </button>
+      </template>
     </nav>
 
     <button class="add-btn" @click="add">
@@ -65,6 +72,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRecipeStore } from '../stores/recipes'
+import { useAuthStore } from '../stores/auth'
 import { signOut } from '../lib/supabase'
 
 defineProps({ open: { type: Boolean, default: false } })
@@ -72,6 +80,7 @@ const emit = defineEmits(['close'])
 
 const router = useRouter()
 const store = useRecipeStore()
+const authStore = useAuthStore()
 
 const mainItems = computed(() => [
   { filter: '', icon: 'books', label: 'Alle Rezepte', count: store.countAll },
@@ -95,6 +104,11 @@ function select(filter) {
 
 function add() {
   router.push('/add')
+  emit('close')
+}
+
+function goAdminQuotes() {
+  router.push('/admin/quotes')
   emit('close')
 }
 

@@ -7,6 +7,29 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 
 ## [Unreleased]
 
+## [1.1.0]
+
+### Added
+- Multi-User-Unterstützung: Rezepte gehören jeweils einem User (`user_id`), neue `profiles`-Tabelle mit `is_admin`-Flag, automatisch befüllt per Trigger bei Registrierung.
+- Admin kann zwischen "Alle Rezepte" und "Nur meine" wechseln und zusätzlich nach einzelnem User filtern.
+- Rezeptkarte zeigt für Admins den Ersteller-Usernamen an.
+- Neue `quotes`-Tabelle in Supabase: Zitate werden jetzt aus der DB geladen statt aus `quotes.js`; Zitate können global oder einem bestimmten User zugewiesen werden.
+- Admin-Oberfläche unter „Verwaltung → Zitate" zum Erstellen, Bearbeiten und Löschen von Zitaten inkl. User-Zuweisung.
+- Registrierung fragt nun einen Benutzernamen ab.
+- SQL-Migration `supabase-migration-002-multi-user.sql` für die DB-Änderungen (user_id, profiles, quotes, RLS-Policies).
+- `netlify.toml` mit Build-Befehl, Publish-Verzeichnis und SPA-Redirect für Vue Router im History-Modus.
+
+### Changed
+- `getProfile()` nutzt `.maybeSingle()` statt `.single()`, damit ein fehlendes Profil nicht mehr die gesamte App blockiert.
+
+### Fixed
+- Endlose RLS-Rekursion behoben: Die Admin-Check-Policies fragten `profiles` innerhalb einer Policy auf `profiles` selbst ab, was zu 500-Fehlern bei jedem Zugriff auf `profiles`/`recipes`/`quotes` führte. Gelöst mit einer `is_admin()` SECURITY DEFINER-Funktion (`supabase-migration-003-fix-rls-recursion.sql`), die RLS beim Admin-Check umgeht.
+- Veraltete, offene RLS-Policies aus einem früheren Setup-Stand (`Lesen erlaubt`, `Nur Auth …`) entfernt, die mit den neuen restriktiven Policies kollidierten.
+- `authStore.load()` fängt Fehler beim Laden des Profils jetzt ab, statt den kompletten Lade-Vorgang der Rezepte-Ansicht zu blockieren.
+
+### Removed
+- `src/lib/quotes.js` entfernt — Zitate kommen vollständig aus der Datenbank.
+
 ## [1.0.0]
 
 ### Added

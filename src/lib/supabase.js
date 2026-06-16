@@ -17,11 +17,14 @@ export async function signIn(email, password) {
   return data
 }
 
-export async function signUp(email, password) {
+export async function signUp(email, password, username) {
   const { data, error } = await db.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      data: { username },
+    },
   })
   if (error) throw error
   return data
@@ -53,13 +56,33 @@ export async function updatePassword(password) {
   if (error) throw error
 }
 
+// ── Profile ──────────────────────────────────
+
+export async function getProfile(userId) {
+  const { data, error } = await db
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function getAllProfiles() {
+  const { data, error } = await db
+    .from('profiles')
+    .select('*')
+    .order('username', { ascending: true })
+  if (error) throw error
+  return data
+}
+
 // ── Rezepte ──────────────────────────────────
 
-export async function getAllRecipes() {
-  const { data, error } = await db
-    .from('recipes')
-    .select('*')
-    .order('created_at', { ascending: false })
+export async function getAllRecipes({ userId } = {}) {
+  let query = db.from('recipes').select('*').order('created_at', { ascending: false })
+  if (userId) query = query.eq('user_id', userId)
+  const { data, error } = await query
   if (error) throw error
   return data
 }
@@ -105,6 +128,51 @@ export async function deleteRecipe(id) {
 
 export async function toggleFavorite(id, current) {
   return updateRecipe(id, { is_favorite: !current })
+}
+
+// ── Quotes ───────────────────────────────────
+
+export async function getQuotesForUser() {
+  const { data, error } = await db
+    .from('quotes')
+    .select('*')
+  if (error) throw error
+  return data
+}
+
+export async function getAllQuotes() {
+  const { data, error } = await db
+    .from('quotes')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function insertQuote(quote) {
+  const { data, error } = await db
+    .from('quotes')
+    .insert(quote)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateQuote(id, fields) {
+  const { data, error } = await db
+    .from('quotes')
+    .update(fields)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteQuote(id) {
+  const { error } = await db.from('quotes').delete().eq('id', id)
+  if (error) throw error
 }
 
 // ── Bilder (Storage) ─────────────────────────
