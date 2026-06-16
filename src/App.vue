@@ -27,14 +27,25 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppSidebar from './components/AppSidebar.vue'
 import { toastState } from './lib/toast'
+import { onAuthStateChange } from './lib/supabase'
+import { useAuthStore } from './stores/auth'
 
 const route = useRoute()
 const router = useRouter()
 const sidebarOpen = ref(false)
+const authStore = useAuthStore()
 
 watch(() => route.fullPath, () => { sidebarOpen.value = false })
+
+onMounted(() => {
+  authStore.load()
+  onAuthStateChange((event, session) => {
+    if (session) authStore.load()
+    else authStore.reset()
+  })
+})
 </script>
