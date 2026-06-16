@@ -48,12 +48,7 @@
         <option value="time">Schnellste zuerst</option>
       </select>
 
-      <div v-if="authStore.isAdmin" class="admin-toggle-group desktop-only">
-        <button class="filter-btn" :class="{ active: store.viewMode === 'mine' }" type="button" @click="setViewMode('mine')">Nur meine</button>
-        <button class="filter-btn" :class="{ active: store.viewMode === 'all' }" type="button" @click="setViewMode('all')">Alle Rezepte</button>
-      </div>
-
-      <select v-if="authStore.isAdmin" class="sort-select desktop-only" v-model="filterUserId">
+      <select v-if="authStore.isAdmin && store.adminMode === 'admin'" class="sort-select desktop-only" v-model="filterUserId">
         <option value="">Alle User</option>
         <option v-for="p in authStore.profiles" :key="p.id" :value="p.id">{{ p.username }}</option>
       </select>
@@ -116,7 +111,7 @@
     <div class="recipe-grid">
       <RecipeCard
         v-for="r in store.filteredList" :key="r.id" :recipe="r"
-        :creator-name="authStore.isAdmin ? authStore.usernameById(r.user_id) : ''"
+        :creator-name="r.user_id !== authStore.userId ? authStore.usernameById(r.user_id) : ''"
         @click="router.push(`/recipe/${r.id}`)"
       />
       <div v-if="!store.filteredList.length" class="empty-state">
@@ -151,7 +146,6 @@ const filterUserId = computed({
   get: () => store.filterUserId,
   set: v => store.setFilterUserId(v),
 })
-function setViewMode(mode) { store.setViewMode(mode) }
 
 const SEASONS = [
   { value: 'Frühling', emoji: '🌱' },

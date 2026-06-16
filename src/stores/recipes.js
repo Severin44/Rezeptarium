@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
 import {
   getAllRecipes,
+  getOwnAndPublicRecipes,
+  getRecipesByIds,
+  getSavedRecipeIds,
   insertRecipe,
   updateRecipe,
   deleteRecipe,
@@ -17,8 +20,9 @@ export const useRecipeStore = defineStore('recipes', {
     activeSeasons: [],
     activeTags: [],
     sortOrder: 'newest',
-    viewMode: 'mine', // 'mine' | 'all' — nur für Admins relevant
-    filterUserId: '', // Admin: auf bestimmten User filtern
+    collectionMode: 'all', // 'all' | 'mine' | 'saved' — User-Sicht (eigene+öffentliche / nur eigene / gespeichert)
+    adminMode: 'user', // 'user' | 'admin' — nur für Admins relevant: normale Sicht vs. wirklich alles
+    filterUserId: '', // Admin View: auf bestimmten User filtern
   }),
 
   getters: {
@@ -67,13 +71,25 @@ export const useRecipeStore = defineStore('recipes', {
   actions: {
     async load() {
       const auth = useAuthStore()
-      // Admin: "Nur meine" oder Filter auf einen bestimmten User anwenden.
-      // RLS liefert Nicht-Admins ohnehin nur die eigenen Rezepte.
-      let userId = ''
-      if (auth.isAdmin) {
-        userId = this.filterUserId || (this.viewMode === 'mine' ? auth.userId : '')
+
+      // Admin View: wirklich alles (ggf. auf einen bestimmten User gefiltert).
+      // Bypasst die normale Sammlung-Logik komplett — nur für Admins erreichbar.
+      if (auth.isAdmin && this.adminMode === 'admin') {
+        this.all = await getAllRecipes(this.filterUserId ? { userId: this.filterUserId } : {})
+        this.loaded = true
+        return
       }
-      this.all = await getAllRecipes(userId ? { userId } : {})
+
+      // User View (für alle, auch Admins solange adminMode 'user' ist):
+      // genau das, was jeder normale User sehen würde.
+      if (this.collectionMode === 'saved') {
+        const ids = await getSavedRecipeIds(auth.userId)
+        this.all = await getRecipesByIds(ids)
+      } else if (this.collectionMode === 'mine') {
+        this.all = await getAllRecipes({ userId: auth.userId })
+      } else {
+        this.all = await getOwnAndPublicRecipes(auth.userId)
+      }
       this.loaded = true
     },
     async add(payload) {
@@ -98,8 +114,12 @@ export const useRecipeStore = defineStore('recipes', {
     setSeasons(arr) { this.activeSeasons = arr },
     setTags(arr) { this.activeTags = arr },
     setSort(v) { this.sortOrder = v },
-    async setViewMode(mode) {
-      this.viewMode = mode
+    async setCollectionMode(mode) {
+      this.collectionMode = mode
+      await this.load()
+    },
+    async setAdminMode(mode) {
+      this.adminMode = mode
       this.filterUserId = ''
       await this.load()
     },

@@ -16,11 +16,14 @@
           <input class="form-input" type="text" id="q-from" v-model="form.from_label" placeholder="ein kleiner Gruss von Sevi 🐶">
         </div>
         <div class="form-group">
-          <label class="form-label" for="q-user">Für User (optional)</label>
-          <select class="form-input" id="q-user" v-model="form.for_user_id">
-            <option value="">Alle (global)</option>
-            <option v-for="p in authStore.profiles" :key="p.id" :value="p.id">{{ p.username }}</option>
-          </select>
+          <label class="form-label">Für User (optional, mehrere möglich)</label>
+          <div class="quote-user-picker">
+            <label v-for="p in authStore.profiles" :key="p.id" class="season-check">
+              <input type="checkbox" v-model="form.for_user_ids" :value="p.id">
+              <span>{{ p.username }}</span>
+            </label>
+          </div>
+          <p class="form-hint">Keine Auswahl = Zitat ist für alle sichtbar.</p>
         </div>
       </div>
       <div class="form-actions">
@@ -39,7 +42,7 @@
         <div class="quote-admin-text">„{{ q.text }}"</div>
         <div class="quote-admin-meta">
           <span v-if="q.from_label">{{ q.from_label }}</span>
-          <span class="chip">{{ q.for_user_id ? (authStore.usernameById(q.for_user_id) || 'Unbekannt') : 'Alle' }}</span>
+          <span class="chip">{{ targetLabel(q) }}</span>
         </div>
         <div class="quote-admin-actions">
           <button class="btn-icon" title="Bearbeiten" @click="edit(q)"><i class="ti ti-edit"></i></button>
@@ -64,13 +67,18 @@ const quotes = ref([])
 const saving = ref(false)
 const editingId = ref(null)
 
-const form = reactive({ text: '', from_label: '', for_user_id: '' })
+const form = reactive({ text: '', from_label: '', for_user_ids: [] })
 
 function resetForm() {
   editingId.value = null
   form.text = ''
   form.from_label = ''
-  form.for_user_id = ''
+  form.for_user_ids = []
+}
+
+function targetLabel(q) {
+  if (!q.for_user_ids || !q.for_user_ids.length) return 'Alle'
+  return q.for_user_ids.map(id => authStore.usernameById(id) || 'Unbekannt').join(', ')
 }
 
 async function load() {
@@ -81,7 +89,7 @@ function edit(q) {
   editingId.value = q.id
   form.text = q.text
   form.from_label = q.from_label || ''
-  form.for_user_id = q.for_user_id || ''
+  form.for_user_ids = [...(q.for_user_ids || [])]
 }
 
 async function remove(q) {
@@ -102,7 +110,7 @@ async function save() {
     const payload = {
       text: form.text.trim(),
       from_label: form.from_label.trim() || null,
-      for_user_id: form.for_user_id || null,
+      for_user_ids: form.for_user_ids.length ? [...form.for_user_ids] : null,
     }
     if (editingId.value) {
       await updateQuote(editingId.value, payload)

@@ -26,7 +26,9 @@ export const useAuthStore = defineStore('auth', {
         this.profile = null
       }
       this.loaded = true
-      if (this.isAdmin) await this.loadProfiles()
+      // Usernames sind für alle lesbar (Discovery/Rezeptkarten zeigen den
+      // Ersteller-Namen), daher unabhängig von der Admin-Rolle laden.
+      if (this.userId) await this.loadProfiles()
     },
     async loadProfiles() {
       this.profiles = await getAllProfiles()
