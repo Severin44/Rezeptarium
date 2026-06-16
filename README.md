@@ -1,63 +1,77 @@
 # Rezeptarium 🌿
 
-Fabiennes persönliches Rezeptbuch im Cottagecore-Bibliotheks-Stil.
+Eine persönliche Rezeptverwaltungs-App im Cottagecore-Bibliotheks-Stil — gebaut mit Liebe für Fabienne.
 
 ---
 
-## Setup (einmalig, ca. 15 Minuten)
+## Was ist das Rezeptarium?
 
-### 1. Supabase Projekt erstellen
-1. Gehe auf [supabase.com](https://supabase.com) → "Start your project"
-2. Neues Projekt erstellen (Region: Europe West)
-3. Warte bis das Projekt fertig ist (~1 Minute)
-
-### 2. Datenbank einrichten
-1. Im Supabase Dashboard: **SQL Editor** → **New Query**
-2. Inhalt von `supabase-setup.sql` reinkopieren
-3. **Run** klicken
-
-### 3. Keys eintragen
-1. Im Supabase Dashboard: **Project Settings** → **API**
-2. Kopiere **Project URL** und **anon public key**
-3. Trage sie in `js/config.js` ein:
-
-```js
-const SUPABASE_URL = 'https://dein-projekt.supabase.co'
-const SUPABASE_KEY = 'dein-anon-key'
-```
-
-### 4. App starten
-Einfach `index.html` im Browser öffnen — fertig!
-
-Oder für Hosting: Ordner auf [Netlify Drop](https://app.netlify.com/drop) ziehen.
+Das Rezeptarium ist eine Web-App zum Sammeln, Verwalten und Entdecken von Rezepten. Inspiriert vom Aesthetic vieler Notion-Setups, aber ohne Abo und ohne Einschränkungen — eine eigene kleine Schatzkammer.
 
 ---
 
-## Zitate anpassen
+## Features
 
-In `js/quotes.js` kannst du beliebig viele Grüsse und Zitate für Fabienne hinzufügen:
-
-```js
-{
-  text: "Dein Zitat hier.",
-  from: "von dir, Sevi 🐶"
-},
-```
+- 📖 Rezepte abspeichern mit Zutaten, Zubereitung und Notizen
+- 🖼️ Titelbild und Schrittbilder direkt im Rezept
+- 🗂️ Kategorien, Tags und Saisons zum Organisieren
+- ❤️ Favoriten markieren
+- 🔍 Suchen und Filtern
+- 🐶 Tägliche Grüsse von Snoopy
 
 ---
 
-## Dateistruktur
+## Tech Stack
+
+| Was | Womit |
+|-----|-------|
+| Frontend | Vue 3 + Vite |
+| State | Pinia |
+| Navigation | Vue Router |
+| Datenbank | Supabase (PostgreSQL) |
+| Bilder | Supabase Storage |
+| Hosting | Netlify |
+
+---
+
+## Projektstruktur
 
 ```
 rezeptarium/
 ├── index.html
-├── supabase-setup.sql
-├── css/
-│   └── style.css
-└── js/
-    ├── config.js      ← Supabase Keys (hier eintragen!)
-    ├── quotes.js      ← Zitate & Grüsse für Fabienne
-    ├── parser.js      ← Zutaten-Parser & Instructions-Renderer
-    ├── db.js          ← Alle Supabase Operationen
-    └── app.js         ← App-Logik & UI
+├── vite.config.js
+├── package.json
+└── src/
+    ├── main.js
+    ├── App.vue
+    ├── assets/
+    │   └── style.css
+    ├── lib/
+    │   ├── supabase.js
+    │   ├── parser.js
+    │   └── quotes.js
+    ├── stores/
+    │   └── recipes.js
+    ├── components/
+    │   ├── AppSidebar.vue
+    │   ├── QuoteBanner.vue
+    │   ├── RecipeCard.vue
+    │   ├── TagInput.vue
+    │   └── SeasonPicker.vue
+    └── views/
+        ├── auth/
+        │   ├── LoginView.vue
+        │   ├── RegisterView.vue
+        │   ├── VerifyEmailView.vue
+        │   ├── CallbackView.vue
+        │   ├── ResetRequestView.vue
+        │   └── ResetPasswordView.vue
+        └── app/
+            ├── GridView.vue
+            ├── DetailView.vue
+            └── FormView.vue
 ```
+
+---
+
+*Gebaut von Severin Lieb — für meine Schwester Fabienne* 🌿
