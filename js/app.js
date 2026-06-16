@@ -702,6 +702,7 @@ function resetFilterModal() {
 function populateModalTagGroup() {
   const group = document.getElementById('modal-tag-group')
   const empty = document.getElementById('modal-tag-empty')
+  if (!group || !empty) return
   const allTags = [...new Set(allRecipes.flatMap(r => r.tags || []))].sort()
   if (!allTags.length) { empty.hidden = false; return }
   empty.hidden = true
