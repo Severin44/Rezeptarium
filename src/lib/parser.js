@@ -2,7 +2,7 @@
 //  Parser: Zutaten & Instructions rendern
 // ─────────────────────────────────────────────
 
-function parseIngredientLine(line) {
+export function parseIngredientLine(line) {
   const trimmed = line.trim()
   if (!trimmed) return null
 
@@ -38,7 +38,7 @@ function parseIngredientLine(line) {
   return { type: 'ingredient', amount: '', name: trimmed }
 }
 
-function renderIngredients(text) {
+export function renderIngredients(text) {
   if (!text) return '<p class="empty-field">Keine Zutaten angegeben.</p>'
   const lines = text.split('\n')
   let html = ''
@@ -61,7 +61,7 @@ function renderIngredients(text) {
   return html || '<p class="empty-field">Keine Zutaten angegeben.</p>'
 }
 
-function renderInstructions(text, imageUrls = {}) {
+export function renderInstructions(text, imageUrls = {}) {
   if (!text) return '<p class="empty-field">Keine Zubereitung angegeben.</p>'
 
   const lines = text.split('\n')
@@ -96,7 +96,7 @@ function renderInstructions(text, imageUrls = {}) {
   return html || '<p class="empty-field">Keine Zubereitung angegeben.</p>'
 }
 
-function escHtml(str) {
+export function escHtml(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

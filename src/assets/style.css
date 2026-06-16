@@ -135,11 +135,28 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 }
 .add-btn:hover { background: var(--ink); }
 
+.logout-btn {
+  margin: 0 12px 12px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: 'Lato', sans-serif;
+  transition: background .15s, color .15s;
+}
+.logout-btn:hover { background: var(--rose-pale); color: var(--rose); border-color: #e8c0a0; }
+
 /* ── Main ── */
 .main { background: var(--bg); }
 
-.view { display: none; padding: 24px; }
-.view.active { display: block; }
+.view { padding: 24px; }
 
 /* ── Hero ── */
 .page-hero { margin-bottom: 16px; }
@@ -788,6 +805,9 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
   text-align: left;
 }
 .login-card .form-group { text-align: left; margin-bottom: 12px; margin-top: 16px; }
+.login-footer-links { margin-top: 16px; font-size: 12px; color: var(--muted); }
+.login-footer-links a { color: var(--warm-dark); text-decoration: none; }
+.login-footer-links a:hover { text-decoration: underline; }
 
 /* ── Filter Dropdowns ── */
 .filter-drop { position: relative; }
