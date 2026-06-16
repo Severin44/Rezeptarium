@@ -87,6 +87,20 @@ export async function getAllRecipes({ userId } = {}) {
   return data
 }
 
+// "Alle Rezepte" aus User-Sicht: eigene + öffentliche Rezepte anderer.
+// Wird explizit so gefiltert (statt sich nur auf RLS zu verlassen), damit
+// Admins im "User View" exakt das sehen, was ein normaler User sieht —
+// die RLS-Policy "Admin sieht alle" würde sonst trotzdem alles liefern.
+export async function getOwnAndPublicRecipes(ownUserId) {
+  const { data, error } = await db
+    .from('recipes')
+    .select('*')
+    .or(`is_public.eq.true,user_id.eq.${ownUserId}`)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
 export async function getRecipeById(id) {
   const { data, error } = await db
     .from('recipes')
@@ -128,6 +142,74 @@ export async function deleteRecipe(id) {
 
 export async function toggleFavorite(id, current) {
   return updateRecipe(id, { is_favorite: !current })
+}
+
+export async function getDiscoveryRecipes(excludeUserId) {
+  let query = db.from('recipes').select('*').eq('is_public', true).order('created_at', { ascending: false })
+  if (excludeUserId) query = query.neq('user_id', excludeUserId)
+  const { data, error } = await query
+  if (error) throw error
+  return data
+}
+
+export async function getRecipesByIds(ids) {
+  if (!ids.length) return []
+  const { data, error } = await db.from('recipes').select('*').in('id', ids)
+  if (error) throw error
+  return data
+}
+
+// ── Likes ────────────────────────────────────
+
+export async function getLikesForRecipeIds(ids) {
+  if (!ids.length) return []
+  const { data, error } = await db.from('likes').select('recipe_id, user_id').in('recipe_id', ids)
+  if (error) throw error
+  return data
+}
+
+export async function likeRecipe(recipeId, userId) {
+  const { error } = await db.from('likes').insert({ recipe_id: recipeId, user_id: userId })
+  if (error) throw error
+}
+
+export async function unlikeRecipe(recipeId, userId) {
+  const { error } = await db.from('likes').delete().eq('recipe_id', recipeId).eq('user_id', userId)
+  if (error) throw error
+}
+
+// ── Ratings ──────────────────────────────────
+
+export async function getRatingsForRecipeIds(ids) {
+  if (!ids.length) return []
+  const { data, error } = await db.from('ratings').select('recipe_id, user_id, score').in('recipe_id', ids)
+  if (error) throw error
+  return data
+}
+
+export async function rateRecipe(recipeId, userId, score) {
+  const { error } = await db
+    .from('ratings')
+    .upsert({ recipe_id: recipeId, user_id: userId, score }, { onConflict: 'recipe_id,user_id' })
+  if (error) throw error
+}
+
+// ── Gespeicherte Rezepte ──────────────────────
+
+export async function getSavedRecipeIds(userId) {
+  const { data, error } = await db.from('saved_recipes').select('recipe_id').eq('user_id', userId)
+  if (error) throw error
+  return data.map(r => r.recipe_id)
+}
+
+export async function saveRecipe(recipeId, userId) {
+  const { error } = await db.from('saved_recipes').insert({ recipe_id: recipeId, user_id: userId })
+  if (error) throw error
+}
+
+export async function unsaveRecipe(recipeId, userId) {
+  const { error } = await db.from('saved_recipes').delete().eq('recipe_id', recipeId).eq('user_id', userId)
+  if (error) throw error
 }
 
 // ── Quotes ───────────────────────────────────

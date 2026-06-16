@@ -11,6 +11,7 @@ import ResetPasswordView from '../views/auth/ResetPasswordView.vue'
 import GridView from '../views/app/GridView.vue'
 import DetailView from '../views/app/DetailView.vue'
 import FormView from '../views/app/FormView.vue'
+import DiscoveryView from '../views/app/DiscoveryView.vue'
 import QuotesAdminView from '../views/admin/QuotesAdminView.vue'
 
 const routes = [
@@ -25,6 +26,7 @@ const routes = [
   { path: '/recipe/:id', name: 'detail', component: DetailView, meta: { requiresAuth: true } },
   { path: '/add', name: 'add', component: FormView, meta: { requiresAuth: true } },
   { path: '/edit/:id', name: 'edit', component: FormView, meta: { requiresAuth: true } },
+  { path: '/discovery', name: 'discovery', component: DiscoveryView, meta: { requiresAuth: true } },
   { path: '/admin/quotes', name: 'admin-quotes', component: QuotesAdminView, meta: { requiresAuth: true, requiresAdmin: true } },
 ]
 

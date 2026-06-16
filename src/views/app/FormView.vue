@@ -81,6 +81,12 @@
         <textarea class="form-textarea" id="f-notes" rows="3" v-model="form.notes" placeholder="Varianten, Quelle, Erinnerungen…"></textarea>
       </div>
 
+      <label class="public-toggle">
+        <input type="checkbox" v-model="form.is_public">
+        <span class="public-toggle-track"><span class="public-toggle-thumb"></span></span>
+        <span class="public-toggle-label"><i class="ti ti-world"></i>Rezept öffentlich teilen</span>
+      </label>
+
       <div class="form-actions">
         <button type="button" class="btn-cancel" @click="router.push('/')">Abbrechen</button>
         <button type="submit" class="btn-save" :disabled="saving">
@@ -115,7 +121,7 @@ const saving = ref(false)
 
 const form = reactive({
   name: '', category: 'Sonstiges', prep_time: '', cook_time: '', servings: '',
-  ingredients: '', instructions: '', notes: '', seasons: [], tags: [],
+  ingredients: '', instructions: '', notes: '', seasons: [], tags: [], is_public: false,
 })
 
 async function loadForEdit() {
@@ -131,6 +137,7 @@ async function loadForEdit() {
   form.notes = r.notes || ''
   form.seasons = [...(r.seasons || [])]
   form.tags = [...(r.tags || [])]
+  form.is_public = !!r.is_public
   coverPreview.value = r.cover_image_url || ''
 }
 onMounted(loadForEdit)
@@ -184,6 +191,7 @@ async function save() {
       cover_image_url: coverUrl,
       seasons: [...form.seasons],
       tags: [...form.tags],
+      is_public: form.is_public,
     }
     if (isEdit.value) {
       await store.edit(route.params.id, payload)

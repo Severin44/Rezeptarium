@@ -34,21 +34,34 @@
     <nav class="sidebar-nav">
       <p class="nav-section">Sammlung</p>
       <button
-        v-for="item in mainItems" :key="item.filter"
-        class="nav-item" :class="{ active: store.activeFilter === item.filter }"
-        @click="select(item.filter)"
+        v-for="item in mainItems" :key="item.key"
+        class="nav-item" :class="{ active: isActive(item) }"
+        @click="selectMainItem(item)"
       >
         <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
-        <span class="nav-count">{{ item.count }}</span>
+        <span v-if="item.count !== undefined" class="nav-count">{{ item.count }}</span>
+      </button>
+
+      <button
+        v-if="authStore.isAdmin" class="nav-item"
+        :class="{ active: store.adminMode === 'admin' }"
+        @click="selectAdminView"
+      >
+        <i class="ti ti-shield-check"></i>Admin: Alle Rezepte
       </button>
 
       <p class="nav-section">Kapitel</p>
       <button
         v-for="cat in categories" :key="cat.filter"
-        class="nav-item" :class="{ active: store.activeFilter === cat.filter }"
+        class="nav-item" :class="{ active: isActive(cat) }"
         @click="select(cat.filter)"
       >
         <i :class="`ti ti-${cat.icon}`"></i>{{ cat.label }}
+      </button>
+
+      <p class="nav-section">Entdecken</p>
+      <button class="nav-item" :class="{ active: route.name === 'discovery' }" @click="goDiscovery">
+        <i class="ti ti-world"></i>Discovery
       </button>
 
       <template v-if="authStore.isAdmin">
@@ -70,7 +83,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useRecipeStore } from '../stores/recipes'
 import { useAuthStore } from '../stores/auth'
 import { signOut } from '../lib/supabase'
@@ -79,12 +92,15 @@ defineProps({ open: { type: Boolean, default: false } })
 const emit = defineEmits(['close'])
 
 const router = useRouter()
+const route = useRoute()
 const store = useRecipeStore()
 const authStore = useAuthStore()
 
 const mainItems = computed(() => [
-  { filter: '', icon: 'books', label: 'Alle Rezepte', count: store.countAll },
-  { filter: '__fav__', icon: 'heart', label: 'Favoriten', count: store.countFav },
+  { key: 'all', filter: '', collectionMode: 'all', icon: 'books', label: 'Alle Rezepte' },
+  { key: 'mine', filter: '', collectionMode: 'mine', icon: 'user', label: 'Meine Rezepte', count: store.countAll },
+  { key: 'saved', filter: '', collectionMode: 'saved', icon: 'bookmark', label: 'Gespeicherte' },
+  { key: 'fav', filter: '__fav__', collectionMode: 'mine', icon: 'heart', label: 'Favoriten', count: store.countFav },
 ])
 
 const categories = [
@@ -96,14 +112,47 @@ const categories = [
   { filter: 'Sonstiges', icon: 'leaf', label: 'Sonstiges' },
 ]
 
+function isActive(item) {
+  if (route.name !== 'grid') return false
+  if (store.adminMode === 'admin') return false
+  if (item.collectionMode && item.collectionMode !== store.collectionMode) return false
+  if (item.filter !== undefined && store.activeFilter !== item.filter) return false
+  return true
+}
+
+async function selectMainItem(item) {
+  store.setFilter(item.filter)
+  store.collectionMode = item.collectionMode
+  store.adminMode = 'user'
+  if (router.currentRoute.value.name !== 'grid') router.push('/')
+  await store.load()
+  if (window.innerWidth <= 700) emit('close')
+}
+
+async function selectAdminView() {
+  store.setFilter('')
+  store.adminMode = 'admin'
+  if (router.currentRoute.value.name !== 'grid') router.push('/')
+  await store.load()
+  if (window.innerWidth <= 700) emit('close')
+}
+
 function select(filter) {
   store.setFilter(filter)
+  store.collectionMode = 'mine'
+  store.adminMode = 'user'
   if (router.currentRoute.value.name !== 'grid') router.push('/')
+  store.load()
   if (window.innerWidth <= 700) emit('close')
 }
 
 function add() {
   router.push('/add')
+  emit('close')
+}
+
+function goDiscovery() {
+  router.push('/discovery')
   emit('close')
 }
 

@@ -7,6 +7,17 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 
 ## [Unreleased]
 
+## [1.2.0]
+
+### Added
+- Rezepte können öffentlich geteilt werden (`is_public`-Toggle im Formular, standardmäßig privat).
+- Neue Discovery-Seite (`/discovery`): zeigt öffentliche Rezepte anderer User mit Suche, Kategorie-/Saison-/Tag-Filtern und Sortierung nach Neueste/Beliebteste/Beste Bewertung.
+- Likes (❤️) auf Rezeptkarten und in der Detailansicht, Bewertungen (1–5 Sterne) mit Durchschnitt in der Detailansicht, "In meine Sammlung speichern" für fremde öffentliche Rezepte.
+- Sidebar-Sammlung erweitert um "Meine Rezepte", "Gespeicherte" und einen "🌍 Discovery"-Eintrag.
+
+### Fixed
+- Registrierung neuer User schlug mit 500 fehl (`relation "profiles" does not exist`): `handle_new_user()` läuft im Kontext von `auth.users`, wo `public` nicht im `search_path` enthalten ist. Gefixt mit explizitem `search_path` und schema-qualifiziertem Tabellennamen.
+
 ## [1.1.0]
 
 ### Added
@@ -16,14 +27,13 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 - Neue `quotes`-Tabelle in Supabase: Zitate werden jetzt aus der DB geladen statt aus `quotes.js`; Zitate können global oder einem bestimmten User zugewiesen werden.
 - Admin-Oberfläche unter „Verwaltung → Zitate" zum Erstellen, Bearbeiten und Löschen von Zitaten inkl. User-Zuweisung.
 - Registrierung fragt nun einen Benutzernamen ab.
-- SQL-Migration `supabase-migration-002-multi-user.sql` für die DB-Änderungen (user_id, profiles, quotes, RLS-Policies).
 - `netlify.toml` mit Build-Befehl, Publish-Verzeichnis und SPA-Redirect für Vue Router im History-Modus.
 
 ### Changed
 - `getProfile()` nutzt `.maybeSingle()` statt `.single()`, damit ein fehlendes Profil nicht mehr die gesamte App blockiert.
 
 ### Fixed
-- Endlose RLS-Rekursion behoben: Die Admin-Check-Policies fragten `profiles` innerhalb einer Policy auf `profiles` selbst ab, was zu 500-Fehlern bei jedem Zugriff auf `profiles`/`recipes`/`quotes` führte. Gelöst mit einer `is_admin()` SECURITY DEFINER-Funktion (`supabase-migration-003-fix-rls-recursion.sql`), die RLS beim Admin-Check umgeht.
+- Endlose RLS-Rekursion behoben: Die Admin-Check-Policies fragten `profiles` innerhalb einer Policy auf `profiles` selbst ab, was zu 500-Fehlern bei jedem Zugriff auf `profiles`/`recipes`/`quotes` führte. Gelöst mit einer `is_admin()` SECURITY DEFINER-Funktion, die RLS beim Admin-Check umgeht.
 - Veraltete, offene RLS-Policies aus einem früheren Setup-Stand (`Lesen erlaubt`, `Nur Auth …`) entfernt, die mit den neuen restriktiven Policies kollidierten.
 - `authStore.load()` fängt Fehler beim Laden des Profils jetzt ab, statt den kompletten Lade-Vorgang der Rezepte-Ansicht zu blockieren.
 
