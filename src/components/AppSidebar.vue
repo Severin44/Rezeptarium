@@ -98,7 +98,7 @@ const authStore = useAuthStore()
 
 const mainItems = computed(() => [
   { key: 'all', filter: '', collectionMode: 'all', icon: 'books', label: 'Alle Rezepte' },
-  { key: 'mine', filter: '', collectionMode: 'mine', icon: 'user', label: 'Meine Rezepte', count: store.countAll },
+  { key: 'mine', filter: '', collectionMode: 'mine', icon: 'user', label: 'Meine Rezepte', count: store.countMine },
   { key: 'saved', filter: '', collectionMode: 'saved', icon: 'bookmark', label: 'Gespeicherte' },
   { key: 'fav', filter: '__fav__', collectionMode: 'mine', icon: 'heart', label: 'Favoriten', count: store.countFav },
 ])

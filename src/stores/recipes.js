@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import {
   getAllRecipes,
-  getOwnAndPublicRecipes,
+  getOwnAndSavedRecipes,
+  getOwnRecipeCount,
   getRecipesByIds,
   getSavedRecipeIds,
   insertRecipe,
@@ -14,6 +15,7 @@ import { useAuthStore } from './auth'
 export const useRecipeStore = defineStore('recipes', {
   state: () => ({
     all: [],
+    mineCount: 0,
     loaded: false,
     activeFilter: '',
     searchQuery: '',
@@ -27,6 +29,7 @@ export const useRecipeStore = defineStore('recipes', {
 
   getters: {
     countAll: (s) => s.all.length,
+    countMine: (s) => s.mineCount,
     countFav: (s) => s.all.filter(r => r.is_favorite).length,
     allTags: (s) => [...new Set(s.all.flatMap(r => r.tags || []))].sort(),
 
@@ -85,10 +88,13 @@ export const useRecipeStore = defineStore('recipes', {
       if (this.collectionMode === 'saved') {
         const ids = await getSavedRecipeIds(auth.userId)
         this.all = await getRecipesByIds(ids)
+        this.mineCount = await getOwnRecipeCount(auth.userId)
       } else if (this.collectionMode === 'mine') {
         this.all = await getAllRecipes({ userId: auth.userId })
+        this.mineCount = this.all.length
       } else {
-        this.all = await getOwnAndPublicRecipes(auth.userId)
+        this.all = await getOwnAndSavedRecipes(auth.userId)
+        this.mineCount = this.all.filter(r => r.user_id === auth.userId).length
       }
       this.loaded = true
     },

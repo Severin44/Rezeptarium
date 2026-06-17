@@ -87,18 +87,29 @@ export async function getAllRecipes({ userId } = {}) {
   return data
 }
 
-// "Alle Rezepte" aus User-Sicht: eigene + öffentliche Rezepte anderer.
-// Wird explizit so gefiltert (statt sich nur auf RLS zu verlassen), damit
-// Admins im "User View" exakt das sehen, was ein normaler User sieht —
-// die RLS-Policy "Admin sieht alle" würde sonst trotzdem alles liefern.
-export async function getOwnAndPublicRecipes(ownUserId) {
-  const { data, error } = await db
-    .from('recipes')
-    .select('*')
-    .or(`is_public.eq.true,user_id.eq.${ownUserId}`)
-    .order('created_at', { ascending: false })
+// "Alle Rezepte" aus User-Sicht: eigene + gespeicherte fremde Rezepte.
+// Explizit gefiltert (statt nur auf RLS zu verlassen), damit Admins im
+// "User View" exakt dasselbe sehen wie ein normaler User.
+export async function getOwnAndSavedRecipes(ownUserId) {
+  const savedIds = await getSavedRecipeIds(ownUserId)
+  let query = db.from('recipes').select('*').order('created_at', { ascending: false })
+  if (savedIds.length > 0) {
+    query = query.or(`user_id.eq.${ownUserId},id.in.(${savedIds.join(',')})`)
+  } else {
+    query = query.eq('user_id', ownUserId)
+  }
+  const { data, error } = await query
   if (error) throw error
   return data
+}
+
+export async function getOwnRecipeCount(userId) {
+  const { count, error } = await db
+    .from('recipes')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+  if (error) throw error
+  return count || 0
 }
 
 export async function getRecipeById(id) {
