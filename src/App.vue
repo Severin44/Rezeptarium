@@ -45,12 +45,9 @@ watch(() => route.fullPath, () => { sidebarOpen.value = false })
 
 onMounted(() => {
   authStore.load()
-  onAuthStateChange(async (event, session) => {
-    if (session) {
-      await authStore.load()
-      recipeStore.loaded = false
-      await recipeStore.load()
-    } else {
+  onAuthStateChange((event, session) => {
+    if (session) authStore.load()
+    else {
       authStore.reset()
       recipeStore.$reset()
     }

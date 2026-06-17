@@ -12,6 +12,9 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAdmin: (s) => !!s.profile?.is_admin,
     username: (s) => s.profile?.username || '',
+    avatarUrl: (s) => s.profile?.avatar_url || null,
+    avatarColor: (s) => s.profile?.avatar_color || '#eef0e0',
+    bio: (s) => s.profile?.bio || '',
     usernameById: (s) => (id) => s.profiles.find(p => p.id === id)?.username || '',
   },
 

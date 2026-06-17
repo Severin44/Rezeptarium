@@ -13,6 +13,11 @@ import DetailView from '../views/app/DetailView.vue'
 import FormView from '../views/app/FormView.vue'
 import DiscoveryView from '../views/app/DiscoveryView.vue'
 import QuotesAdminView from '../views/admin/QuotesAdminView.vue'
+import ProfileView from '../views/app/ProfileView.vue'
+import ProfileEditView from '../views/app/ProfileEditView.vue'
+import FollowingView from '../views/app/FollowingView.vue'
+import FriendsView from '../views/app/FriendsView.vue'
+import UserSearchView from '../views/app/UserSearchView.vue'
 
 const routes = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
@@ -27,6 +32,11 @@ const routes = [
   { path: '/add', name: 'add', component: FormView, meta: { requiresAuth: true } },
   { path: '/edit/:id', name: 'edit', component: FormView, meta: { requiresAuth: true } },
   { path: '/discovery', name: 'discovery', component: DiscoveryView, meta: { requiresAuth: true } },
+  { path: '/following', name: 'following', component: FollowingView, meta: { requiresAuth: true } },
+  { path: '/friends', name: 'friends', component: FriendsView, meta: { requiresAuth: true } },
+  { path: '/users', name: 'users', component: UserSearchView, meta: { requiresAuth: true } },
+  { path: '/profile/edit', name: 'profile-edit', component: ProfileEditView, meta: { requiresAuth: true } },
+  { path: '/profile/:username', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
   { path: '/admin/quotes', name: 'admin-quotes', component: QuotesAdminView, meta: { requiresAuth: true, requiresAdmin: true } },
 ]
 

@@ -40,6 +40,7 @@
       >
         <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
         <span v-if="item.count !== undefined" class="nav-count">{{ item.count }}</span>
+        <span v-if="item.badge" class="nav-badge">{{ item.badge }}</span>
       </button>
 
       <button
@@ -59,9 +60,22 @@
         <i :class="`ti ti-${cat.icon}`"></i>{{ cat.label }}
       </button>
 
-      <p class="nav-section">Entdecken</p>
+      <p class="nav-section">Social</p>
       <button class="nav-item" :class="{ active: route.name === 'discovery' }" @click="goDiscovery">
         <i class="ti ti-world"></i>Discovery
+      </button>
+      <button class="nav-item" :class="{ active: route.name === 'following' }" @click="go('/following')">
+        <i class="ti ti-rss"></i>Following
+      </button>
+      <button class="nav-item" :class="{ active: route.name === 'friends' }" @click="go('/friends')">
+        <i class="ti ti-users-group"></i>Freunde
+      </button>
+      <button class="nav-item" :class="{ active: route.name === 'users' }" @click="go('/users')">
+        <i class="ti ti-search"></i>User suchen
+      </button>
+      <button class="nav-item" :class="{ active: store.collectionMode === 'shared' && route.name === 'grid' }" @click="selectMainItem({ key: 'shared', filter: '', collectionMode: 'shared' })">
+        <i class="ti ti-share"></i>Mit mir geteilt
+        <span v-if="store.unseenShares" class="nav-badge">{{ store.unseenShares }}</span>
       </button>
 
       <template v-if="authStore.isAdmin">
@@ -72,8 +86,11 @@
       </template>
     </nav>
 
-    <button class="add-btn" @click="add">
-      <i class="ti ti-book-plus"></i>Eintrag hinzufügen
+    <button v-if="showAddBtn" class="add-btn" @click="add">
+      <i class="ti ti-book-plus"></i>Neues Rezept
+    </button>
+    <button class="logout-btn" @click="goProfile">
+      <i class="ti ti-user-circle"></i>Mein Profil
     </button>
     <button class="logout-btn" @click="logout">
       <i class="ti ti-logout"></i>Abmelden
@@ -96,11 +113,16 @@ const route = useRoute()
 const store = useRecipeStore()
 const authStore = useAuthStore()
 
+const showAddBtn = computed(() => {
+  const noAdd = ['favorites', 'saved']
+  return !noAdd.includes(store.collectionMode)
+})
+
 const mainItems = computed(() => [
   { key: 'all', filter: '', collectionMode: 'all', icon: 'books', label: 'Alle Rezepte' },
   { key: 'mine', filter: '', collectionMode: 'mine', icon: 'user', label: 'Meine Rezepte', count: store.countMine },
   { key: 'saved', filter: '', collectionMode: 'saved', icon: 'bookmark', label: 'Gespeicherte' },
-  { key: 'fav', filter: '__fav__', collectionMode: 'mine', icon: 'heart', label: 'Favoriten', count: store.countFav },
+  { key: 'favorites', filter: '', collectionMode: 'favorites', icon: 'heart', label: 'Favoriten' },
 ])
 
 const categories = [
@@ -151,8 +173,18 @@ function add() {
   emit('close')
 }
 
+function go(path) {
+  router.push(path)
+  emit('close')
+}
+
 function goDiscovery() {
   router.push('/discovery')
+  emit('close')
+}
+
+function goProfile() {
+  if (authStore.username) router.push(`/profile/${authStore.username}`)
   emit('close')
 }
 
