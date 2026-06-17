@@ -72,13 +72,13 @@
         </div>
         <textarea
           ref="instTextarea" class="form-textarea" id="f-inst" rows="8" v-model="form.instructions"
-          placeholder="Butter und Zucker cremig rühren.&#10;Eier einzeln unterrühren..."
+          placeholder="--- Vorbereitung ---&#10;Ofen auf 180°C vorheizen.&#10;&#10;--- Hauptteil ---&#10;Butter und Zucker cremig rühren.&#10;Eier einzeln unterrühren..."
         ></textarea>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="f-notes">Tipps & Notizen</label>
-        <textarea class="form-textarea" id="f-notes" rows="3" v-model="form.notes" placeholder="Varianten, Quelle, Erinnerungen…"></textarea>
+        <textarea class="form-textarea" id="f-notes" rows="3" v-model="form.notes" placeholder="--- Varianten ---&#10;Mit Birnen statt Äpfeln…&#10;&#10;--- Quelle ---&#10;Grossmutters Rezeptbuch"></textarea>
       </div>
 
       <label class="public-toggle">

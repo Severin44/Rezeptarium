@@ -61,9 +61,8 @@ export function renderIngredients(text) {
   return html || '<p class="empty-field">Keine Zutaten angegeben.</p>'
 }
 
-export function renderInstructions(text, imageUrls = {}) {
-  if (!text) return '<p class="empty-field">Keine Zubereitung angegeben.</p>'
-
+function renderSection(text, emptyMsg, imageUrls = null) {
+  if (!text) return `<p class="empty-field">${emptyMsg}</p>`
   const lines = text.split('\n')
   let html = ''
   let textBuffer = []
@@ -77,23 +76,33 @@ export function renderInstructions(text, imageUrls = {}) {
   }
 
   for (const line of lines) {
-    const imgMatch = line.trim().match(/^!\[\]\((.+?)\)$/)
-    if (imgMatch) {
+    const sectionMatch = line.trim().match(/^---\s*(.+?)\s*---$/)
+    const imgMatch = imageUrls !== null && line.trim().match(/^!\[\]\((.+?)\)$/)
+
+    if (sectionMatch) {
+      flushText()
+      html += `<span class="ing-section-head">${escHtml(sectionMatch[1])}</span>`
+    } else if (imgMatch) {
       flushText()
       const key = imgMatch[1]
       const src = key.startsWith('http') ? key : imageUrls[key]
-      if (src) {
-        html += `<img src="${escHtml(src)}" class="inst-img" alt="Schritt-Bild" loading="lazy">`
-      } else {
-        html += `<div class="inst-img-placeholder"><i class="ti ti-photo"></i>Bild wird geladen…</div>`
-      }
+      if (src) html += `<img src="${escHtml(src)}" class="inst-img" alt="Schritt-Bild" loading="lazy">`
+      else html += `<div class="inst-img-placeholder"><i class="ti ti-photo"></i>Bild wird geladen…</div>`
     } else {
       textBuffer.push(line)
     }
   }
 
   flushText()
-  return html || '<p class="empty-field">Keine Zubereitung angegeben.</p>'
+  return html || `<p class="empty-field">${emptyMsg}</p>`
+}
+
+export function renderInstructions(text, imageUrls = {}) {
+  return renderSection(text, 'Keine Zubereitung angegeben.', imageUrls)
+}
+
+export function renderNotes(text) {
+  return renderSection(text, 'Keine Tipps oder Notizen.')
 }
 
 export function escHtml(str) {
