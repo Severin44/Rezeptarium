@@ -4,6 +4,7 @@
       <span v-if="!recipe.cover_image_url" class="card-emoji">{{ catEmoji(recipe.category) }}</span>
       <span class="cat-badge">{{ recipe.category || '' }}</span>
       <span v-if="recipe.is_favorite" class="fav-badge"><i class="ti ti-heart"></i></span>
+      <span v-if="recipe._share_seen === false" class="new-badge">New</span>
       <button
         v-if="showLike" class="card-like-btn" :class="{ liked }"
         :title="liked ? 'Unlike' : 'Like'" @click.stop="$emit('toggle-like')"

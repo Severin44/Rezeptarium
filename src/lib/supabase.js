@@ -77,6 +77,245 @@ export async function getAllProfiles() {
   return data
 }
 
+export async function getProfileByUsername(username) {
+  const { data, error } = await db
+    .from('profiles')
+    .select('*')
+    .eq('username', username)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function updateProfile(userId, fields) {
+  const { data, error } = await db
+    .from('profiles')
+    .update(fields)
+    .eq('id', userId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const AVATAR_BUCKET = 'avatars'
+
+export async function uploadAvatar(file, userId) {
+  const ext = file.name.split('.').pop()
+  const path = `${userId}/avatar.${ext}`
+  const { data, error } = await db.storage
+    .from(AVATAR_BUCKET)
+    .upload(path, file, { upsert: true })
+  if (error) throw error
+  const { data: url } = db.storage.from(AVATAR_BUCKET).getPublicUrl(data.path)
+  return url.publicUrl
+}
+
+export async function searchUsers(query, currentUserId) {
+  const { data, error } = await db
+    .from('profiles')
+    .select('id, username, avatar_url, avatar_color, bio')
+    .ilike('username', `%${query}%`)
+    .neq('id', currentUserId)
+    .limit(20)
+  if (error) throw error
+  return data
+}
+
+// ── Follows ──────────────────────────────────
+
+export async function getFollowerCount(userId) {
+  const { count, error } = await db
+    .from('follows').select('*', { count: 'exact', head: true }).eq('following_id', userId)
+  if (error) throw error
+  return count || 0
+}
+
+export async function getFollowingCount(userId) {
+  const { count, error } = await db
+    .from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', userId)
+  if (error) throw error
+  return count || 0
+}
+
+export async function isFollowing(followerId, followingId) {
+  const { data, error } = await db
+    .from('follows').select('id').eq('follower_id', followerId).eq('following_id', followingId).maybeSingle()
+  if (error) throw error
+  return !!data
+}
+
+export async function areFriends(userA, userB) {
+  const { data, error } = await db.rpc('are_friends', { user_a: userA, user_b: userB })
+  if (error) throw error
+  return !!data
+}
+
+export async function followUser(followerId, followingId) {
+  const { error } = await db.from('follows').insert({ follower_id: followerId, following_id: followingId })
+  if (error) throw error
+}
+
+export async function unfollowUser(followerId, followingId) {
+  const { error } = await db.from('follows').delete().eq('follower_id', followerId).eq('following_id', followingId)
+  if (error) throw error
+}
+
+export async function getMyFollowingIds(userId) {
+  const { data, error } = await db.from('follows').select('following_id').eq('follower_id', userId)
+  if (error) throw error
+  return data.map(r => r.following_id)
+}
+
+export async function getMyFollowerIds(userId) {
+  const { data, error } = await db.from('follows').select('follower_id').eq('following_id', userId)
+  if (error) throw error
+  return data.map(r => r.follower_id)
+}
+
+// ── Profilseiten-Rezepte ──────────────────────
+
+export async function getProfileRecipes(profileUserId, visibility) {
+  const { data, error } = await db
+    .from('recipes')
+    .select('*')
+    .eq('user_id', profileUserId)
+    .eq('visibility', visibility)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+// ── Following-Feed & Friends ──────────────────
+
+export async function getFollowingFeed(userId) {
+  const followingIds = await getMyFollowingIds(userId)
+  if (!followingIds.length) return []
+  const { data, error } = await db
+    .from('recipes')
+    .select('*')
+    .in('user_id', followingIds)
+    .eq('visibility', 'public')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function getFriendsFeed(userId) {
+  const followingIds = await getMyFollowingIds(userId)
+  const followerIds = await getMyFollowerIds(userId)
+  const followingSet = new Set(followingIds)
+  const friendIds = followerIds.filter(id => followingSet.has(id))
+  if (!friendIds.length) return []
+  const { data, error } = await db
+    .from('recipes')
+    .select('*')
+    .in('user_id', friendIds)
+    .in('visibility', ['friends', 'public'])
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+// ── Direktes Teilen ───────────────────────────
+
+export async function shareRecipe(recipeId, sharedBy, sharedWith) {
+  const { error } = await db.from('recipe_shares').insert({ recipe_id: recipeId, shared_by: sharedBy, shared_with: sharedWith })
+  if (error) throw error
+}
+
+export async function getSharedWithMe(userId) {
+  const { data: shares, error: e1 } = await db
+    .from('recipe_shares').select('recipe_id, shared_by, created_at, seen').eq('shared_with', userId)
+  if (e1) throw e1
+  if (!shares.length) return []
+  const ids = shares.map(s => s.recipe_id)
+  const { data: recipes, error: e2 } = await db.from('recipes').select('*').in('id', ids)
+  if (e2) throw e2
+  const seenMap = Object.fromEntries(shares.map(s => [s.recipe_id, s.seen]))
+  return recipes.map(r => ({ ...r, _share_seen: seenMap[r.id] ?? true }))
+}
+
+export async function markShareSeen(recipeId, userId) {
+  await db.from('recipe_shares').update({ seen: true }).eq('recipe_id', recipeId).eq('shared_with', userId)
+}
+
+export async function getUnseenSharesCount(userId) {
+  const { count, error } = await db
+    .from('recipe_shares').select('*', { count: 'exact', head: true }).eq('shared_with', userId).eq('seen', false)
+  if (error) throw error
+  return count || 0
+}
+
+export async function markSharesAsSeen(userId) {
+  await db.from('recipe_shares').update({ seen: true }).eq('shared_with', userId).eq('seen', false)
+}
+
+export async function getShareableFollowers(userId, { friendsOnly = false } = {}) {
+  const followerIds = await getMyFollowerIds(userId)
+  const followingIds = await getMyFollowingIds(userId)
+  let ids
+  if (friendsOnly) {
+    const followingSet = new Set(followingIds)
+    ids = followerIds.filter(id => followingSet.has(id))
+  } else {
+    ids = [...new Set([...followerIds, ...followingIds])]
+  }
+  if (!ids.length) return []
+  const { data, error } = await db
+    .from('profiles').select('id, username, avatar_url, avatar_color').in('id', ids)
+  if (error) throw error
+  return data
+}
+
+export async function removeShare(recipeId, userId) {
+  const { error } = await db
+    .from('recipe_shares').delete().eq('recipe_id', recipeId).eq('shared_with', userId)
+  if (error) throw error
+}
+
+export async function getSavedCountByUser(myUserId, profileUserId) {
+  const savedIds = await getSavedRecipeIds(myUserId)
+  if (!savedIds.length) return 0
+  const { count, error } = await db
+    .from('recipes')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', profileUserId)
+    .in('id', savedIds)
+  if (error) throw error
+  return count || 0
+}
+
+export async function isSharedWithUser(recipeId, userId) {
+  const { data, error } = await db
+    .from('recipe_shares').select('id, shared_by').eq('recipe_id', recipeId).eq('shared_with', userId).maybeSingle()
+  if (error) throw error
+  return data || null
+}
+
+// ── Favoriten (eigene + geliked-e fremde) ─────
+
+export async function getFavoriteRecipes(userId) {
+  const [{ data: ownFavs, error: e1 }, { data: likedIds, error: e2 }] = await Promise.all([
+    db.from('recipes').select('*').eq('user_id', userId).eq('is_favorite', true),
+    db.from('likes').select('recipe_id').eq('user_id', userId),
+  ])
+  if (e1) throw e1
+  if (e2) throw e2
+
+  const ownFavIds = new Set(ownFavs.map(r => r.id))
+  const foreignIds = likedIds.map(l => l.recipe_id).filter(id => !ownFavIds.has(id))
+
+  let foreignRecipes = []
+  if (foreignIds.length) {
+    const { data, error } = await db.from('recipes').select('*').in('id', foreignIds)
+    if (error) throw error
+    foreignRecipes = data
+  }
+
+  return [...ownFavs, ...foreignRecipes]
+}
+
 // ── Rezepte ──────────────────────────────────
 
 export async function getAllRecipes({ userId } = {}) {
@@ -156,7 +395,7 @@ export async function toggleFavorite(id, current) {
 }
 
 export async function getDiscoveryRecipes(excludeUserId) {
-  let query = db.from('recipes').select('*').eq('is_public', true).order('created_at', { ascending: false })
+  let query = db.from('recipes').select('*').eq('visibility', 'public').order('created_at', { ascending: false })
   if (excludeUserId) query = query.neq('user_id', excludeUserId)
   const { data, error } = await query
   if (error) throw error

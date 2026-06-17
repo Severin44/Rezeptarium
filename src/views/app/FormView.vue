@@ -81,11 +81,10 @@
         <textarea class="form-textarea" id="f-notes" rows="3" v-model="form.notes" placeholder="--- Varianten ---&#10;Mit Birnen statt Äpfeln…&#10;&#10;--- Quelle ---&#10;Grossmutters Rezeptbuch"></textarea>
       </div>
 
-      <label class="public-toggle">
-        <input type="checkbox" v-model="form.is_public">
-        <span class="public-toggle-track"><span class="public-toggle-thumb"></span></span>
-        <span class="public-toggle-label"><i class="ti ti-world"></i>Rezept öffentlich teilen</span>
-      </label>
+      <div class="form-group">
+        <label class="form-label">Sichtbarkeit</label>
+        <VisibilityPicker v-model="form.visibility" />
+      </div>
 
       <div class="form-actions">
         <button type="button" class="btn-cancel" @click="router.push('/')">Abbrechen</button>
@@ -106,6 +105,7 @@ import { getRecipeById, uploadImage } from '../../lib/supabase'
 import { showToast } from '../../lib/toast'
 import SeasonPicker from '../../components/SeasonPicker.vue'
 import TagInput from '../../components/TagInput.vue'
+import VisibilityPicker from '../../components/VisibilityPicker.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -121,7 +121,7 @@ const saving = ref(false)
 
 const form = reactive({
   name: '', category: 'Sonstiges', prep_time: '', cook_time: '', servings: '',
-  ingredients: '', instructions: '', notes: '', seasons: [], tags: [], is_public: false,
+  ingredients: '', instructions: '', notes: '', seasons: [], tags: [], visibility: 'private',
 })
 
 async function loadForEdit() {
@@ -137,7 +137,7 @@ async function loadForEdit() {
   form.notes = r.notes || ''
   form.seasons = [...(r.seasons || [])]
   form.tags = [...(r.tags || [])]
-  form.is_public = !!r.is_public
+  form.visibility = r.visibility || (r.is_public ? 'public' : 'private')
   coverPreview.value = r.cover_image_url || ''
 }
 onMounted(loadForEdit)
@@ -191,7 +191,8 @@ async function save() {
       cover_image_url: coverUrl,
       seasons: [...form.seasons],
       tags: [...form.tags],
-      is_public: form.is_public,
+      visibility: form.visibility,
+      is_public: form.visibility === 'public',
     }
     if (isEdit.value) {
       await store.edit(route.params.id, payload)

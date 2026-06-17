@@ -5,6 +5,10 @@ import {
   getOwnRecipeCount,
   getRecipesByIds,
   getSavedRecipeIds,
+  getSharedWithMe,
+  getUnseenSharesCount,
+  markSharesAsSeen,
+  getFavoriteRecipes,
   insertRecipe,
   updateRecipe,
   deleteRecipe,
@@ -16,15 +20,16 @@ export const useRecipeStore = defineStore('recipes', {
   state: () => ({
     all: [],
     mineCount: 0,
+    unseenShares: 0,
     loaded: false,
     activeFilter: '',
     searchQuery: '',
     activeSeasons: [],
     activeTags: [],
     sortOrder: 'newest',
-    collectionMode: 'all', // 'all' | 'mine' | 'saved' — User-Sicht (eigene+öffentliche / nur eigene / gespeichert)
-    adminMode: 'user', // 'user' | 'admin' — nur für Admins relevant: normale Sicht vs. wirklich alles
-    filterUserId: '', // Admin View: auf bestimmten User filtern
+    collectionMode: 'all', // 'all' | 'mine' | 'saved' | 'shared' | 'favorites'
+    adminMode: 'user', // 'user' | 'admin'
+    filterUserId: '',
   }),
 
   getters: {
@@ -92,6 +97,13 @@ export const useRecipeStore = defineStore('recipes', {
       } else if (this.collectionMode === 'mine') {
         this.all = await getAllRecipes({ userId: auth.userId })
         this.mineCount = this.all.length
+      } else if (this.collectionMode === 'shared') {
+        this.all = await getSharedWithMe(auth.userId)
+        this.mineCount = await getOwnRecipeCount(auth.userId)
+        this.unseenShares = this.all.filter(r => !r._share_seen).length
+      } else if (this.collectionMode === 'favorites') {
+        this.all = await getFavoriteRecipes(auth.userId)
+        this.mineCount = await getOwnRecipeCount(auth.userId)
       } else {
         this.all = await getOwnAndSavedRecipes(auth.userId)
         this.mineCount = this.all.filter(r => r.user_id === auth.userId).length
@@ -132,6 +144,10 @@ export const useRecipeStore = defineStore('recipes', {
     async setFilterUserId(id) {
       this.filterUserId = id
       await this.load()
+    },
+    async refreshUnseenShares() {
+      const auth = useAuthStore()
+      if (auth.userId) this.unseenShares = await getUnseenSharesCount(auth.userId)
     },
   },
 })

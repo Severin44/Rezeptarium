@@ -33,11 +33,13 @@ import AppSidebar from './components/AppSidebar.vue'
 import { toastState } from './lib/toast'
 import { onAuthStateChange } from './lib/supabase'
 import { useAuthStore } from './stores/auth'
+import { useRecipeStore } from './stores/recipes'
 
 const route = useRoute()
 const router = useRouter()
 const sidebarOpen = ref(false)
 const authStore = useAuthStore()
+const recipeStore = useRecipeStore()
 
 watch(() => route.fullPath, () => { sidebarOpen.value = false })
 
@@ -45,7 +47,10 @@ onMounted(() => {
   authStore.load()
   onAuthStateChange((event, session) => {
     if (session) authStore.load()
-    else authStore.reset()
+    else {
+      authStore.reset()
+      recipeStore.$reset()
+    }
   })
 })
 </script>

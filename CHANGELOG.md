@@ -8,14 +8,38 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 ## [Unreleased]
 
 ### Added
-- Abschnittsüberschriften (`--- Name ---`) funktionieren jetzt auch in Zubereitung und Tipps & Notizen — gleicher visueller Stil wie bei den Zutaten.
+- **Profilseiten** (`/profile/:username`): Avatar (Upload oder Farbwahl), Bio, Follower-/Following-Zähler, Rezepte nach Sichtbarkeit tabulliert.
+- **Profil bearbeiten** (`/profile/edit`): Avatar-Upload oder Buchstaben-Avatar mit 6 Farboptionen, Benutzername, Bio (max. 160 Zeichen).
+- **Follow-System**: Nutzern folgen/entfolgen direkt auf Profilseiten und in der User-Suche. Gegenseitiges Folgen = Freunde.
+- **Drei Sichtbarkeits-Stufen**: Privat / Freunde / Öffentlich (ersetzt den alten `is_public`-Toggle). `VisibilityPicker`-Komponente im Formular mit grünem Custom-Radio.
+- **Following-Feed** (`/following`): Öffentliche Rezepte aller gefolgten User.
+- **Freunde-Feed** (`/friends`): Freundes- und öffentliche Rezepte aller gegenseitigen Follower.
+- **User suchen** (`/users`): Debounced Username-Suche mit Inline-Follow/Unfollow.
+- **Direktes Rezept-Teilen**: Owner kann Rezept an Freunde (privat) oder alle Follower (öffentlich/Freunde) senden. Share-Modal in Detailansicht, Badge in Sidebar für ungesehene.
+- **Mit mir geteilt** (unter Social in der Sidebar): empfangene Rezepte mit „New"-Badge für noch nicht angesehene. Beim Öffnen wird automatisch als gesehen markiert.
+- **Favoriten**-Sammlung: eigene Favoriten (`is_favorite`) + fremd gelikte Rezepte zusammen.
+- `UserAvatar`-Komponente: Profilbild oder Buchstaben-Avatar mit Farbhintergrund, Größen sm/md/lg/xl.
+- `UserChip`-Komponente: klickbarer Username-Link mit Hover-Tooltip (Avatar, Bio-Snippet, Anzahl gespeicherter Rezepte von dieser Person).
+- Sichtbarkeits-Chip in der Detailansicht (Schloss / Personen / Welt-Icon).
+- Detailansicht zeigt „aus der Sammlung von [User]" und „Geteilt von [User]" als klickbare `UserChip`s mit Profil-Tooltip.
+- Löschen-Bestätigung als eigenes In-App-Modal (kein nativer Browser-Dialog mehr).
+- Abschnittsüberschriften (`--- Name ---`) in Zubereitung und Tipps & Notizen — gleicher visueller Stil wie bei den Zutaten.
 - Neue `renderNotes()`-Funktion im Parser für strukturierte Notizen-Darstellung.
+- Supabase-Migration `migration_19_profiles_follows_sharing.sql`: `follows`-, `recipe_shares`-Tabellen, `are_friends()`-Funktion, `visibility`-Spalte, Avatar-Storage-Bucket, RLS-Policies.
+
+### Changed
+- Sidebar: Social-Sektion enthält Discovery, Following, Freunde, User suchen, Mit mir geteilt. Buttons "Neues Rezept", "Mein Profil", "Abmelden" fest am unteren Rand.
+- Liken eines fremden Rezepts speichert es automatisch in die Sammlung; Entspeichern entfernt automatisch den Like.
+- Mit mir geteilte Rezepte: Speichern entfernt den Share-Eintrag; Ablehnen (X-Button) entfernt ohne Bestätigungsdialog.
+- Herz & Rating bei eigenen nicht-privaten Rezepten sichtbar aber nicht klickbar; bei privaten Rezepten ausgeblendet. Bei geteilten privaten Rezepten klickbar, aber Zähler erst bei friends/public sichtbar.
 - Placeholder-Text in den Formular-Textareas zeigt die `--- Abschnitt ---` Syntax als Beispiel.
 
 ### Fixed
+- `onAuthStateChange` Handler war async und verursachte Whitescreen beim Laden — auf synchronen Handler zurückgesetzt.
+- Sidebar-Buttons scrollen nicht mit der Navigation mit (overflow auf Nav verlagert).
+- `seen`-Update auf `recipe_shares` schlug wegen fehlender UPDATE-RLS-Policy lautlos fehl.
 - "Alle Rezepte" zeigte öffentliche Rezepte fremder User — zeigt jetzt nur eigene + gespeicherte Rezepte.
 - Count neben "Meine Rezepte" in der Sidebar spiegelte die aktuell angezeigte View statt der echten Anzahl eigener Rezepte.
-- Whitescreen nach Login durch fehlerhaften `async onAuthStateChange`-Handler (Supabase feuert den Event sofort beim Registrieren, was `recipeStore.load()` vor der Router-Initialisierung auslöste).
 
 ## [1.2.0]
 
