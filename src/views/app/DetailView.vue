@@ -90,7 +90,7 @@
 
       <section v-if="recipe.notes" class="detail-section">
         <h3 class="sec-title">Tipps & Notizen</h3>
-        <p class="notes-text">{{ recipe.notes }}</p>
+        <div class="inst-content" v-html="renderNotes(recipe.notes)"></div>
       </section>
     </template>
 
@@ -151,7 +151,7 @@ import {
   getSavedRecipeIds, saveRecipe, unsaveRecipe,
   shareRecipe, getShareableFollowers, isSharedWithUser, removeShare, markShareSeen,
 } from '../../lib/supabase'
-import { renderIngredients, renderInstructions } from '../../lib/parser'
+import { renderIngredients, renderInstructions, renderNotes } from '../../lib/parser'
 import { useRecipeStore } from '../../stores/recipes'
 import { useAuthStore } from '../../stores/auth'
 import { showToast } from '../../lib/toast'

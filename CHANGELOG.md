@@ -23,6 +23,8 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 - Sichtbarkeits-Chip in der Detailansicht (Schloss / Personen / Welt-Icon).
 - Detailansicht zeigt „aus der Sammlung von [User]" und „Geteilt von [User]" als klickbare `UserChip`s mit Profil-Tooltip.
 - Löschen-Bestätigung als eigenes In-App-Modal (kein nativer Browser-Dialog mehr).
+- Abschnittsüberschriften (`--- Name ---`) in Zubereitung und Tipps & Notizen — gleicher visueller Stil wie bei den Zutaten.
+- Neue `renderNotes()`-Funktion im Parser für strukturierte Notizen-Darstellung.
 - Supabase-Migration `migration_19_profiles_follows_sharing.sql`: `follows`-, `recipe_shares`-Tabellen, `are_friends()`-Funktion, `visibility`-Spalte, Avatar-Storage-Bucket, RLS-Policies.
 
 ### Changed
@@ -30,11 +32,14 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 - Liken eines fremden Rezepts speichert es automatisch in die Sammlung; Entspeichern entfernt automatisch den Like.
 - Mit mir geteilte Rezepte: Speichern entfernt den Share-Eintrag; Ablehnen (X-Button) entfernt ohne Bestätigungsdialog.
 - Herz & Rating bei eigenen nicht-privaten Rezepten sichtbar aber nicht klickbar; bei privaten Rezepten ausgeblendet. Bei geteilten privaten Rezepten klickbar, aber Zähler erst bei friends/public sichtbar.
+- Placeholder-Text in den Formular-Textareas zeigt die `--- Abschnitt ---` Syntax als Beispiel.
 
 ### Fixed
 - `onAuthStateChange` Handler war async und verursachte Whitescreen beim Laden — auf synchronen Handler zurückgesetzt.
 - Sidebar-Buttons scrollen nicht mit der Navigation mit (overflow auf Nav verlagert).
 - `seen`-Update auf `recipe_shares` schlug wegen fehlender UPDATE-RLS-Policy lautlos fehl.
+- "Alle Rezepte" zeigte öffentliche Rezepte fremder User — zeigt jetzt nur eigene + gespeicherte Rezepte.
+- Count neben "Meine Rezepte" in der Sidebar spiegelte die aktuell angezeigte View statt der echten Anzahl eigener Rezepte.
 
 ## [1.2.0]
 
