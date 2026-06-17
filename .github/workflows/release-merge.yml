@@ -1,0 +1,29 @@
+name: Merge Tag to Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  merge-to-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.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 }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge tag into release
+        run: |
+          git checkout release
+          git merge "${{ github.ref_name }}" --no-edit
+          git push origin release
