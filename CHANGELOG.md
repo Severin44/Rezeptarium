@@ -7,6 +7,16 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 
 ## [Unreleased]
 
+### Added
+- Abschnittsüberschriften (`--- Name ---`) funktionieren jetzt auch in Zubereitung und Tipps & Notizen — gleicher visueller Stil wie bei den Zutaten.
+- Neue `renderNotes()`-Funktion im Parser für strukturierte Notizen-Darstellung.
+- Placeholder-Text in den Formular-Textareas zeigt die `--- Abschnitt ---` Syntax als Beispiel.
+
+### Fixed
+- "Alle Rezepte" zeigte öffentliche Rezepte fremder User — zeigt jetzt nur eigene + gespeicherte Rezepte.
+- Count neben "Meine Rezepte" in der Sidebar spiegelte die aktuell angezeigte View statt der echten Anzahl eigener Rezepte.
+- Whitescreen nach Login durch fehlerhaften `async onAuthStateChange`-Handler (Supabase feuert den Event sofort beim Registrieren, was `recipeStore.load()` vor der Router-Initialisierung auslöste).
+
 ## [1.2.0]
 
 ### Added
