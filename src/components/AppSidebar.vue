@@ -212,8 +212,6 @@
   <div v-if="activeMenu" class="ctx-menu" :style="activeMenuStyle" @click.stop>
     <template v-if="activeMenu.type === 'custom'">
       <button @click="openCustomFilterModal(activeMenu.cf)"><i class="ti ti-pencil"></i>Bearbeiten</button>
-      <button @click="menuMoveFilter('up')"><i class="ti ti-arrow-up"></i>Nach oben</button>
-      <button @click="menuMoveFilter('down')"><i class="ti ti-arrow-down"></i>Nach unten</button>
     </template>
     <button @click="menuHideItem"><i class="ti ti-eye-off"></i>Ausblenden</button>
     <template v-if="activeMenu.type === 'custom'">
