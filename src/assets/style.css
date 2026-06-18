@@ -1176,7 +1176,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 /* ── Eigene Filter-Tabs in Sidebar ── */
 /* ── Nav item wrapper with ⋮ options button ── */
 .nav-item-wrap {
-  display: flex; align-items: stretch; border-radius: var(--radius);
+  display: flex; align-items: stretch; border-radius: var(--radius); overflow: hidden;
 }
 .nav-item-wrap .nav-item {
   flex: 1; border-radius: var(--radius) 0 0 var(--radius);
