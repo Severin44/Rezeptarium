@@ -278,6 +278,30 @@
   <div v-if="showSaveFilterHint && !filterModalOpen && !editMode" class="save-filter-hint" @click="saveCurrentAsFilter">
     <i class="ti ti-filter-plus"></i> Filterkombination als Tab speichern
   </div>
+
+  <!-- "Filter aktualisieren" Hint -->
+  <div v-if="showUpdateFilterHint && !filterModalOpen && !editMode" class="save-filter-hint save-filter-update" @click="updateActiveFilter">
+    <i class="ti ti-filter-edit"></i> Filter aktualisieren
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div v-if="deleteConfirmOpen" class="modal-overlay" @click.self="cancelDeleteFilter">
+    <div class="modal" style="max-width:340px">
+      <div class="modal-header">
+        <h3>Filter löschen</h3>
+        <button class="btn-icon" @click="cancelDeleteFilter"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p>„{{ filterToDelete?.name }}" wirklich löschen?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" @click="cancelDeleteFilter">Abbrechen</button>
+        <button class="btn-save btn-danger" @click="confirmDeleteFilter">
+          <i class="ti ti-trash"></i>Löschen
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -306,15 +330,7 @@ const SEASONS = [
   { value: 'Winter', emoji: '❄️' },
 ]
 
-const NO_ADD_VIEWS = ['favorites', 'saved', 'shared']
-const NO_ADD_ROUTES = ['discovery', 'following', 'friends', 'users', 'profile', 'profile-edit']
-
-const showAddBtn = computed(() => {
-  if (editMode.value) return false
-  if (NO_ADD_ROUTES.includes(route.name)) return false
-  if (route.name === 'grid' && NO_ADD_VIEWS.includes(store.collectionMode)) return false
-  return true
-})
+const showAddBtn = computed(() => !editMode.value)
 
 onMounted(async () => {
   if (authStore.userId && !sidebarStore.loaded) {
@@ -351,6 +367,7 @@ function isCustomFilterActive(cf) {
 }
 
 async function selectMainItem(item) {
+  activeCustomFilterId.value = null
   store.setCategories([])
   store.setFilter('')
   store.collectionMode = item.key
@@ -370,6 +387,7 @@ async function selectAdminView() {
 }
 
 function selectCategory(cat) {
+  activeCustomFilterId.value = null
   store.setCategories([cat])
   store.setFilter('')
   store.collectionMode = 'all'
@@ -390,6 +408,7 @@ async function selectShared() {
 }
 
 function applyCustomFilter(cf) {
+  activeCustomFilterId.value = cf.id
   store.setCategories(cf.categories || [])
   store.setSeasons(cf.seasons || [])
   store.setTags(cf.tags || [])
@@ -410,6 +429,7 @@ function isSocialActive(key) {
   return route.name === key
 }
 function selectSocial(key) {
+  activeCustomFilterId.value = null
   if (key === 'shared') { selectShared(); return }
   go(SOCIAL_ROUTES[key])
 }
@@ -419,6 +439,41 @@ function go(path) { router.push(path); emit('close') }
 function goProfile() { if (authStore.username) router.push(`/profile/${authStore.username}`); emit('close') }
 function goAdminQuotes() { router.push('/admin/quotes'); emit('close') }
 async function logout() { await signOut(); router.push('/login'); emit('close') }
+
+// ── Custom Filter tracking ────────────────────
+const activeCustomFilterId = ref(null)
+const deleteConfirmOpen = ref(false)
+const filterToDelete = ref(null)
+
+const activeCustomFilter = computed(() =>
+  activeCustomFilterId.value
+    ? sidebarStore.customFilters.find(f => f.id === activeCustomFilterId.value) ?? null
+    : null
+)
+
+const filtersMatchActiveCf = computed(() => {
+  const cf = activeCustomFilter.value
+  if (!cf) return true
+  const eq = (a, b) => a.length === b.length && [...a].sort().every((v, i) => v === [...b].sort()[i])
+  return (
+    eq(store.activeCategories, cf.categories || []) &&
+    eq(store.activeSeasons, cf.seasons || []) &&
+    eq(store.activeTags, cf.tags || [])
+  )
+})
+
+const KAPITEL_CATS = ['Frühstück', 'Hauptgericht', 'Dessert', 'Backen', 'Snack', 'Sonstiges']
+const hasExtraFilters = computed(() => {
+  const { activeCategories: cats, activeSeasons: seasons, activeTags: tags } = store
+  if (!cats.length && !seasons.length && !tags.length) return false
+  // Single default kapitel category with no extra seasons/tags → not "extra"
+  if (cats.length === 1 && KAPITEL_CATS.includes(cats[0]) && !seasons.length && !tags.length) return false
+  return true
+})
+
+const showUpdateFilterHint = computed(() =>
+  route.name === 'grid' && !!activeCustomFilterId.value && !filtersMatchActiveCf.value
+)
 
 // ── Edit Mode (inline drag & drop) ───────────
 
@@ -506,8 +561,7 @@ async function saveCustomFilter() {
 }
 
 const showSaveFilterHint = computed(() =>
-  route.name === 'grid' &&
-  (store.activeCategories.length || store.activeSeasons.length || store.activeTags.length)
+  route.name === 'grid' && !activeCustomFilterId.value && hasExtraFilters.value
 )
 
 function saveCurrentAsFilter() {
@@ -545,11 +599,37 @@ async function menuHideItem() {
   closeMenu()
 }
 
-async function menuRemoveFilter() {
+function menuRemoveFilter() {
   const { cf } = activeMenu.value
   if (!cf) return
-  await sidebarStore.removeCustomFilter(cf.id)
+  filterToDelete.value = cf
+  deleteConfirmOpen.value = true
   closeMenu()
+}
+
+async function confirmDeleteFilter() {
+  await sidebarStore.removeCustomFilter(filterToDelete.value.id)
+  if (activeCustomFilterId.value === filterToDelete.value.id) activeCustomFilterId.value = null
+  deleteConfirmOpen.value = false
+  filterToDelete.value = null
+}
+
+function cancelDeleteFilter() {
+  deleteConfirmOpen.value = false
+  filterToDelete.value = null
+}
+
+async function updateActiveFilter() {
+  const cf = activeCustomFilter.value
+  if (!cf) return
+  await sidebarStore.editCustomFilter(cf.id, {
+    name: cf.name,
+    categories: [...store.activeCategories],
+    seasons: [...store.activeSeasons],
+    tags: [...store.activeTags],
+    favorites_only: store.activeFilter === '__fav__',
+  })
+  activeCustomFilterId.value = null
 }
 
 async function menuMoveFilter(dir) {

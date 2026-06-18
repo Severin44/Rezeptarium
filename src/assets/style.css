@@ -85,7 +85,11 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 .snoopy-wrap { margin-top: 12px; display: flex; justify-content: center; }
 .snoopy-img { width: 80px; height: auto; }
 
-.sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
+.sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(0,0,0,.12) transparent; }
+.sidebar-nav::-webkit-scrollbar { width: 3px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 2px; }
+.sidebar-nav::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.12); }
 
 .nav-section {
   font-family: 'EB Garamond', serif;
@@ -1230,6 +1234,9 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
   box-shadow: 0 2px 12px rgba(0,0,0,.18); transition: opacity .2s;
 }
 .save-filter-hint:hover { opacity: .88; }
+.save-filter-update { background: var(--warm-dark); }
+.btn-save.btn-danger { background: #c0432a; }
+.btn-save.btn-danger:hover { background: #a33520; }
 
 /* ── Sidebar Edit View ── */
 .sidebar-edit-wrap { display: flex; flex-direction: column; gap: 20px; max-width: 520px; }
