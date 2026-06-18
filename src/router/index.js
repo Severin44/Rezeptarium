@@ -18,6 +18,7 @@ import ProfileEditView from '../views/app/ProfileEditView.vue'
 import FollowingView from '../views/app/FollowingView.vue'
 import FriendsView from '../views/app/FriendsView.vue'
 import UserSearchView from '../views/app/UserSearchView.vue'
+import SidebarEditView from '../views/app/SidebarEditView.vue'
 
 const routes = [
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
@@ -35,6 +36,7 @@ const routes = [
   { path: '/following', name: 'following', component: FollowingView, meta: { requiresAuth: true } },
   { path: '/friends', name: 'friends', component: FriendsView, meta: { requiresAuth: true } },
   { path: '/users', name: 'users', component: UserSearchView, meta: { requiresAuth: true } },
+  { path: '/sidebar/edit', name: 'sidebar-edit', component: SidebarEditView, meta: { requiresAuth: true } },
   { path: '/profile/edit', name: 'profile-edit', component: ProfileEditView, meta: { requiresAuth: true } },
   { path: '/profile/:username', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
   { path: '/admin/quotes', name: 'admin-quotes', component: QuotesAdminView, meta: { requiresAuth: true, requiresAdmin: true } },

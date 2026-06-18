@@ -23,6 +23,7 @@ export const useRecipeStore = defineStore('recipes', {
     unseenShares: 0,
     loaded: false,
     activeFilter: '',
+    activeCategories: [],  // Mehrfachauswahl-Kategoriefilter (Teil 3)
     searchQuery: '',
     activeSeasons: [],
     activeTags: [],
@@ -43,8 +44,10 @@ export const useRecipeStore = defineStore('recipes', {
 
       if (s.activeFilter === '__fav__') {
         list = list.filter(r => r.is_favorite)
-      } else if (s.activeFilter) {
-        list = list.filter(r => r.category === s.activeFilter)
+      }
+
+      if (s.activeCategories.length) {
+        list = list.filter(r => s.activeCategories.includes(r.category))
       }
 
       if (s.activeSeasons.length) {
@@ -128,6 +131,7 @@ export const useRecipeStore = defineStore('recipes', {
       await this.load()
     },
     setFilter(f) { this.activeFilter = f },
+    setCategories(arr) { this.activeCategories = arr },
     setSearch(q) { this.searchQuery = q },
     setSeasons(arr) { this.activeSeasons = arr },
     setTags(arr) { this.activeTags = arr },

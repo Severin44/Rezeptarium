@@ -527,3 +527,92 @@ export function getImageUrl(path) {
 export async function deleteImage(path) {
   await db.storage.from(STORAGE_BUCKET).remove([path])
 }
+
+// ── Eigene Filter-Tabs ────────────────────────
+
+export async function getCustomFilters(userId) {
+  const { data, error } = await db
+    .from('custom_filters')
+    .select('*')
+    .eq('user_id', userId)
+    .order('sort_order')
+  if (error) throw error
+  return data || []
+}
+
+export async function createCustomFilter(userId, fields) {
+  const { data, error } = await db
+    .from('custom_filters')
+    .insert({ user_id: userId, ...fields })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateCustomFilter(id, fields) {
+  const { data, error } = await db
+    .from('custom_filters')
+    .update(fields)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteCustomFilter(id) {
+  const { error } = await db.from('custom_filters').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function reorderCustomFilters(updates) {
+  // updates = [{ id, sort_order }, ...]
+  for (const u of updates) {
+    await db.from('custom_filters').update({ sort_order: u.sort_order }).eq('id', u.id)
+  }
+}
+
+// ── Sidebar-Layout ────────────────────────────
+
+export async function getSidebarLayout(userId) {
+  const { data, error } = await db
+    .from('sidebar_layout')
+    .select('*')
+    .eq('user_id', userId)
+    .order('sort_order')
+  if (error) throw error
+  return data || []
+}
+
+export async function upsertSidebarItems(items) {
+  // items = [{ user_id, item_key, section, visible, sort_order }, ...]
+  const { error } = await db
+    .from('sidebar_layout')
+    .upsert(items, { onConflict: 'user_id,item_key' })
+  if (error) throw error
+}
+
+export async function resetSidebarLayout(userId) {
+  await db.from('sidebar_layout').delete().eq('user_id', userId)
+  await db.from('sidebar_section_order').delete().eq('user_id', userId)
+}
+
+export async function getSidebarSectionOrder(userId) {
+  const { data, error } = await db
+    .from('sidebar_section_order')
+    .select('*')
+    .eq('user_id', userId)
+    .order('sort_order')
+  if (error) throw error
+  return data || []
+}
+
+export async function saveSidebarSectionOrder(userId, sections) {
+  // sections = ['sammlung', 'kapitel', 'social', 'custom_filters']
+  const rows = sections.map((section, i) => ({ user_id: userId, section, sort_order: i }))
+  const { error } = await db
+    .from('sidebar_section_order')
+    .upsert(rows, { onConflict: 'user_id,section' })
+  if (error) throw error
+}
