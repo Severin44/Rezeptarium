@@ -8,6 +8,17 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 ## [Unreleased]
 
 ### Added
+- **Kontextuelle Vorauswahl im Formular**: Klick auf "+ Neues Rezept" aus einer gefilterten View übernimmt aktive Kategorie, Saisons und Tags direkt ins Formular.
+- **Eigene Filter-Tabs** in der Sidebar: User kann benannte Filterkombinationen (Kategorien, Saison, Tags, Favoriten-Flag) als persönliche Tabs speichern, bearbeiten, löschen und umsortieren. Zugriff per Drei-Punkte-Menü oder Rechtsklick. "Als Tab speichern" direkt aus aktiver Filterung.
+- **Kategorien als Mehrfachauswahl-Filter**: Neues Kategorien-Dropdown in der Toolbar (neben Saison/Tags), erlaubt ODER-Verknüpfung mehrerer Kategorien unabhängig von der Sidebar-Auswahl.
+- **Sidebar Customization** (`/sidebar/edit`): Jeder Sidebar-Eintrag (Sammlung, Kapitel, Social) kann ein-/ausgeblendet und innerhalb seiner Sektion umsortiert werden; Sektionsreihenfolge selbst ist ebenfalls anpassbar. Einstellungen werden pro User in Supabase persistiert (`sidebar_layout`, `sidebar_section_order`). "Zurücksetzen" stellt den Default wieder her.
+- DB-Migration `migration_18_custom_filters_sidebar.sql`: Neue Tabellen `custom_filters`, `sidebar_layout`, `sidebar_section_order` mit RLS-Policies.
+
+### Changed
+- Kategorie-Filter in der Sidebar setzt jetzt `activeCategories = [cat]` (statt `activeFilter`) — gleicher State wie das neue Kategorien-Dropdown.
+- "+ Neues Rezept"-Button und Inline-Add-Button ausgeblendet auf Favoriten, Gespeicherte, Mit mir geteilt, Discovery, Following und Friends.
+
+### Added
 - **Profilseiten** (`/profile/:username`): Avatar (Upload oder Farbwahl), Bio, Follower-/Following-Zähler, Rezepte nach Sichtbarkeit tabulliert.
 - **Profil bearbeiten** (`/profile/edit`): Avatar-Upload oder Buchstaben-Avatar mit 6 Farboptionen, Benutzername, Bio (max. 160 Zeichen).
 - **Follow-System**: Nutzern folgen/entfolgen direkt auf Profilseiten und in der User-Suche. Gegenseitiges Folgen = Freunde.

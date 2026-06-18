@@ -124,8 +124,14 @@ const form = reactive({
   ingredients: '', instructions: '', notes: '', seasons: [], tags: [], visibility: 'private',
 })
 
+function applyContextFromStore() {
+  if (store.activeCategories.length === 1) form.category = store.activeCategories[0]
+  if (store.activeSeasons.length) form.seasons = [...store.activeSeasons]
+  if (store.activeTags.length) form.tags = [...store.activeTags]
+}
+
 async function loadForEdit() {
-  if (!isEdit.value) return
+  if (!isEdit.value) { applyContextFromStore(); return }
   const r = await getRecipeById(route.params.id)
   form.name = r.name || ''
   form.category = r.category || 'Sonstiges'

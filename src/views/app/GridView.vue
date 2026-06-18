@@ -15,6 +15,20 @@
       </div>
 
       <div class="filter-drop desktop-only">
+        <button class="filter-btn" type="button" @click.stop="toggleCategoryPanel">
+          <i class="ti ti-bookmark" aria-hidden="true"></i>
+          <span>{{ categoryLabel }}</span>
+          <i class="ti ti-chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="filter-panel" v-if="categoryPanelOpen" @click.stop>
+          <label v-for="c in CATEGORIES" :key="c" class="filter-opt">
+            <input type="checkbox" :checked="store.activeCategories.includes(c)" @change="toggleDesktopCategory(c)">
+            {{ c }}
+          </label>
+        </div>
+      </div>
+
+      <div class="filter-drop desktop-only">
         <button class="filter-btn" type="button" @click.stop="toggleSeasonPanel">
           <i class="ti ti-sun" aria-hidden="true"></i>
           <span>{{ seasonLabel }}</span>
@@ -58,7 +72,7 @@
         <span>{{ filterModalLabel }}</span>
       </button>
 
-      <button class="add-btn-inline desktop-only" @click="router.push('/add')">
+      <button v-if="showAddInline" class="add-btn-inline desktop-only" @click="router.push('/add')">
         <i class="ti ti-book-plus"></i>Eintrag
       </button>
     </div>
@@ -69,6 +83,17 @@
       <div class="filter-modal-header">
         <span class="filter-modal-title">Filter &amp; Sortierung</span>
         <button class="filter-modal-close" type="button" @click="closeFilterModal"><i class="ti ti-x"></i></button>
+      </div>
+
+      <div class="filter-modal-section">
+        <p class="filter-modal-label">Kategorien</p>
+        <div class="modal-tag-group">
+          <button
+            v-for="c in CATEGORIES" :key="c" type="button"
+            class="modal-tag-pill" :class="{ active: modalCategories.includes(c) }"
+            @click="toggleModalCategory(c)"
+          >{{ c }}</button>
+        </div>
       </div>
 
       <div class="filter-modal-section">
@@ -132,13 +157,14 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useRecipeStore } from '../../stores/recipes'
 import { useAuthStore } from '../../stores/auth'
 import QuoteBanner from '../../components/QuoteBanner.vue'
 import RecipeCard from '../../components/RecipeCard.vue'
 
 const router = useRouter()
+const route = useRoute()
 const store = useRecipeStore()
 const authStore = useAuthStore()
 
@@ -147,6 +173,7 @@ const filterUserId = computed({
   set: v => store.setFilterUserId(v),
 })
 
+const CATEGORIES = ['Frühstück', 'Hauptgericht', 'Dessert', 'Backen', 'Snack', 'Sonstiges']
 const SEASONS = [
   { value: 'Frühling', emoji: '🌱' },
   { value: 'Sommer', emoji: '☀️' },
@@ -154,22 +181,35 @@ const SEASONS = [
   { value: 'Winter', emoji: '❄️' },
 ]
 
+const NO_ADD_MODES = ['favorites', 'saved', 'shared']
+
+const showAddInline = computed(() => !NO_ADD_MODES.includes(store.collectionMode))
+
 const search = computed({ get: () => store.searchQuery, set: v => store.setSearch(v.toLowerCase()) })
 const sort = computed({ get: () => store.sortOrder, set: v => store.setSort(v) })
 
+const categoryLabel = computed(() => store.activeCategories.length ? `Kategorien (${store.activeCategories.length})` : 'Kategorien')
 const seasonLabel = computed(() => store.activeSeasons.length ? store.activeSeasons.join(', ') : 'Saison')
 const tagLabel = computed(() => store.activeTags.length ? `Tags (${store.activeTags.length})` : 'Tags')
 const filterModalLabel = computed(() => {
-  const total = store.activeSeasons.length + store.activeTags.length
+  const total = store.activeCategories.length + store.activeSeasons.length + store.activeTags.length
   return total ? `Filter (${total})` : 'Filter'
 })
 
 // ── Desktop-Dropdowns ──
+const categoryPanelOpen = ref(false)
 const seasonPanelOpen = ref(false)
 const tagPanelOpen = ref(false)
-function toggleSeasonPanel() { tagPanelOpen.value = false; seasonPanelOpen.value = !seasonPanelOpen.value }
-function toggleTagPanel() { seasonPanelOpen.value = false; tagPanelOpen.value = !tagPanelOpen.value }
-function closeAllPanels() { seasonPanelOpen.value = false; tagPanelOpen.value = false }
+function toggleCategoryPanel() { seasonPanelOpen.value = false; tagPanelOpen.value = false; categoryPanelOpen.value = !categoryPanelOpen.value }
+function toggleSeasonPanel() { categoryPanelOpen.value = false; tagPanelOpen.value = false; seasonPanelOpen.value = !seasonPanelOpen.value }
+function toggleTagPanel() { categoryPanelOpen.value = false; seasonPanelOpen.value = false; tagPanelOpen.value = !tagPanelOpen.value }
+function closeAllPanels() { categoryPanelOpen.value = false; seasonPanelOpen.value = false; tagPanelOpen.value = false }
+
+function toggleDesktopCategory(c) {
+  const set = new Set(store.activeCategories)
+  set.has(c) ? set.delete(c) : set.add(c)
+  store.setCategories([...set])
+}
 function toggleDesktopSeason(v) {
   const set = new Set(store.activeSeasons)
   set.has(v) ? set.delete(v) : set.add(v)
@@ -185,11 +225,13 @@ onUnmounted(() => document.removeEventListener('click', closeAllPanels))
 
 // ── Mobile Filter-Modal ──
 const filterModalOpen = ref(false)
+const modalCategories = ref([])
 const modalSeasons = ref([])
 const modalTags = ref([])
 const modalSort = ref('newest')
 
 function openFilterModal() {
+  modalCategories.value = [...store.activeCategories]
   modalSeasons.value = [...store.activeSeasons]
   modalTags.value = [...store.activeTags]
   modalSort.value = store.sortOrder
@@ -200,16 +242,21 @@ function closeFilterModal() {
   filterModalOpen.value = false
   document.body.style.overflow = ''
 }
+function toggleModalCategory(c) {
+  modalCategories.value = modalCategories.value.includes(c) ? modalCategories.value.filter(x => x !== c) : [...modalCategories.value, c]
+}
 function toggleModalTag(t) {
   modalTags.value = modalTags.value.includes(t) ? modalTags.value.filter(x => x !== t) : [...modalTags.value, t]
 }
 function applyFilterModal() {
+  store.setCategories([...modalCategories.value])
   store.setSeasons([...modalSeasons.value])
   store.setTags([...modalTags.value])
   store.setSort(modalSort.value)
   closeFilterModal()
 }
 function resetFilterModal() {
+  modalCategories.value = []
   modalSeasons.value = []
   modalTags.value = []
   modalSort.value = 'newest'
