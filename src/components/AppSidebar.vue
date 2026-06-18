@@ -1,5 +1,5 @@
 <template>
-  <aside class="sidebar" :class="{ open }">
+  <aside class="sidebar" :class="{ open, 'sidebar-edit-active': editMode }">
     <button class="sidebar-close" aria-label="Menü schliessen" @click="$emit('close')">
       <i class="ti ti-x"></i>
     </button>
@@ -32,106 +32,188 @@
     </div>
 
     <nav class="sidebar-nav">
-      <template v-for="section in sidebarStore.effectiveSections" :key="section">
-        <!-- Sammlung -->
-        <template v-if="section === 'sammlung' && sidebarStore.visibleItems('sammlung').length">
-          <p class="nav-section">Sammlung</p>
-          <button
-            v-for="item in sidebarStore.visibleItems('sammlung')" :key="item.key"
-            class="nav-item" :class="{ active: isMainActive(item) }"
-            @click="selectMainItem(item)"
-          >
-            <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
-            <span v-if="item.key === 'mine'" class="nav-count">{{ store.countMine }}</span>
-          </button>
 
-          <button
-            v-if="authStore.isAdmin" class="nav-item"
-            :class="{ active: store.adminMode === 'admin' }"
-            @click="selectAdminView"
-          >
-            <i class="ti ti-shield-check"></i>Admin: Alle Rezepte
-          </button>
-        </template>
+      <!-- ── EDIT MODE ─────────────────────────── -->
+      <template v-if="editMode">
+        <p class="nav-section edit-mode-hint"><i class="ti ti-drag-drop"></i>Ziehen zum Sortieren</p>
 
-        <!-- Kapitel -->
-        <template v-if="section === 'kapitel' && sidebarStore.visibleItems('kapitel').length">
-          <p class="nav-section">Kapitel</p>
-          <button
-            v-for="item in sidebarStore.visibleItems('kapitel')" :key="item.key"
-            class="nav-item" :class="{ active: isCategoryActive(item) }"
-            @click="selectCategory(item.key.replace('category:', ''))"
-          >
-            <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
-          </button>
-        </template>
+        <Draggable
+          v-model="editSections"
+          item-key="self"
+          :item-key-fn="s => s"
+          handle=".section-drag-handle"
+          animation="180"
+          @end="onSectionDragEnd"
+        >
+          <template #item="{ element: section }">
+            <div class="edit-section-block" v-if="section !== 'custom_filters' || sidebarStore.customFilters.length">
 
-        <!-- Social -->
-        <template v-if="section === 'social' && sidebarStore.visibleItems('social').length">
-          <p class="nav-section">Social</p>
-          <template v-for="item in sidebarStore.visibleItems('social')" :key="item.key">
-            <button v-if="item.key === 'discovery'" class="nav-item" :class="{ active: route.name === 'discovery' }" @click="go('/discovery')">
-              <i class="ti ti-world"></i>Discovery
-            </button>
-            <button v-else-if="item.key === 'following'" class="nav-item" :class="{ active: route.name === 'following' }" @click="go('/following')">
-              <i class="ti ti-rss"></i>Following
-            </button>
-            <button v-else-if="item.key === 'friends'" class="nav-item" :class="{ active: route.name === 'friends' }" @click="go('/friends')">
-              <i class="ti ti-users-group"></i>Freunde
-            </button>
-            <button v-else-if="item.key === 'users'" class="nav-item" :class="{ active: route.name === 'users' }" @click="go('/users')">
-              <i class="ti ti-search"></i>User suchen
-            </button>
-            <button v-else-if="item.key === 'shared'" class="nav-item" :class="{ active: store.collectionMode === 'shared' && route.name === 'grid' }" @click="selectShared">
-              <i class="ti ti-share"></i>Mit mir geteilt
-              <span v-if="store.unseenShares" class="nav-badge">{{ store.unseenShares }}</span>
-            </button>
+              <!-- Section header with drag handle -->
+              <div class="nav-section edit-section-header">
+                <i class="ti ti-grip-vertical section-drag-handle"></i>
+                {{ SECTION_LABELS[section] }}
+              </div>
+
+              <!-- Draggable visible items -->
+              <Draggable
+                v-model="editVisible[section]"
+                :item-key="i => i.key"
+                :group="section"
+                handle=".item-drag-handle"
+                animation="150"
+                @end="onItemDragEnd(section)"
+              >
+                <template #item="{ element: item }">
+                  <div class="nav-item edit-nav-item">
+                    <i class="ti ti-grip-vertical item-drag-handle"></i>
+                    <i :class="`ti ti-${item.icon}`"></i>
+                    <span class="edit-item-label">{{ item.label }}</span>
+                    <button class="vis-toggle vis-hide" title="Ausblenden" @click="hideItem(section, item)">
+                      <i class="ti ti-minus"></i>
+                    </button>
+                  </div>
+                </template>
+              </Draggable>
+
+              <!-- Hidden items (grayed, at bottom, not draggable) -->
+              <div
+                v-for="item in editHidden[section]" :key="item.key"
+                class="nav-item edit-nav-item edit-item-hidden"
+              >
+                <i class="ti ti-grip-vertical" style="opacity:.2"></i>
+                <i :class="`ti ti-${item.icon}`"></i>
+                <span class="edit-item-label">{{ item.label }}</span>
+                <button class="vis-toggle vis-show" title="Einblenden" @click="showItem(section, item)">
+                  <i class="ti ti-plus"></i>
+                </button>
+              </div>
+
+            </div>
           </template>
-        </template>
+        </Draggable>
 
-        <!-- Eigene Filter -->
-        <template v-if="section === 'custom_filters'">
-          <div class="nav-section-row">
-            <p class="nav-section">Eigene Filter</p>
+        <!-- Admin always fixed -->
+        <template v-if="authStore.isAdmin">
+          <p class="nav-section">Verwaltung</p>
+          <div class="nav-item edit-nav-item edit-item-fixed">
+            <i class="ti ti-lock" style="opacity:.3;font-size:11px"></i>
+            <i class="ti ti-shield-check"></i>Admin: Alle Rezepte
           </div>
-          <button
-            v-for="cf in sidebarStore.customFilters" :key="cf.id"
-            class="nav-item custom-filter-row" :class="{ active: isCustomFilterActive(cf) }"
-            @click="applyCustomFilter(cf)"
-            @contextmenu.prevent="openCustomFilterMenu(cf, $event)"
-          >
-            <i class="ti ti-filter"></i>
-            <span class="custom-filter-name">{{ cf.name }}</span>
-            <button class="custom-filter-menu-btn" @click.stop="openCustomFilterMenu(cf, $event)">
-              <i class="ti ti-dots-vertical"></i>
-            </button>
-          </button>
-          <button class="nav-item nav-item-add" @click="openCustomFilterModal(null)">
-            <i class="ti ti-plus"></i>Neuer Filter-Tab
-          </button>
         </template>
       </template>
 
-      <template v-if="authStore.isAdmin">
-        <p class="nav-section">Verwaltung</p>
-        <button class="nav-item" @click="goAdminQuotes">
-          <i class="ti ti-quote"></i>Zitate
+      <!-- ── NORMAL MODE ───────────────────────── -->
+      <template v-else>
+        <template v-for="section in sidebarStore.effectiveSections" :key="section">
+
+          <!-- Sammlung -->
+          <template v-if="section === 'sammlung' && sidebarStore.visibleItems('sammlung').length">
+            <p class="nav-section">Sammlung</p>
+            <button
+              v-for="item in sidebarStore.visibleItems('sammlung')" :key="item.key"
+              class="nav-item" :class="{ active: isMainActive(item) }"
+              @click="selectMainItem(item)"
+            >
+              <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
+              <span v-if="item.key === 'mine'" class="nav-count">{{ store.countMine }}</span>
+            </button>
+            <button
+              v-if="authStore.isAdmin" class="nav-item"
+              :class="{ active: store.adminMode === 'admin' }"
+              @click="selectAdminView"
+            >
+              <i class="ti ti-shield-check"></i>Admin: Alle Rezepte
+            </button>
+          </template>
+
+          <!-- Kapitel -->
+          <template v-if="section === 'kapitel' && sidebarStore.visibleItems('kapitel').length">
+            <p class="nav-section">Kapitel</p>
+            <button
+              v-for="item in sidebarStore.visibleItems('kapitel')" :key="item.key"
+              class="nav-item" :class="{ active: isCategoryActive(item) }"
+              @click="selectCategory(item.key.replace('category:', ''))"
+            >
+              <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
+            </button>
+          </template>
+
+          <!-- Social -->
+          <template v-if="section === 'social' && sidebarStore.visibleItems('social').length">
+            <p class="nav-section">Social</p>
+            <template v-for="item in sidebarStore.visibleItems('social')" :key="item.key">
+              <button v-if="item.key === 'discovery'" class="nav-item" :class="{ active: route.name === 'discovery' }" @click="go('/discovery')">
+                <i class="ti ti-world"></i>Discovery
+              </button>
+              <button v-else-if="item.key === 'following'" class="nav-item" :class="{ active: route.name === 'following' }" @click="go('/following')">
+                <i class="ti ti-rss"></i>Following
+              </button>
+              <button v-else-if="item.key === 'friends'" class="nav-item" :class="{ active: route.name === 'friends' }" @click="go('/friends')">
+                <i class="ti ti-users-group"></i>Freunde
+              </button>
+              <button v-else-if="item.key === 'users'" class="nav-item" :class="{ active: route.name === 'users' }" @click="go('/users')">
+                <i class="ti ti-search"></i>User suchen
+              </button>
+              <button v-else-if="item.key === 'shared'" class="nav-item" :class="{ active: store.collectionMode === 'shared' && route.name === 'grid' }" @click="selectShared">
+                <i class="ti ti-share"></i>Mit mir geteilt
+                <span v-if="store.unseenShares" class="nav-badge">{{ store.unseenShares }}</span>
+              </button>
+            </template>
+          </template>
+
+          <!-- Eigene Filter -->
+          <template v-if="section === 'custom_filters' && sidebarStore.customFilters.length">
+            <p class="nav-section">Eigene Filter</p>
+            <button
+              v-for="cf in sidebarStore.customFilters" :key="cf.id"
+              class="nav-item custom-filter-row" :class="{ active: isCustomFilterActive(cf) }"
+              @click="applyCustomFilter(cf)"
+              @contextmenu.prevent="openCustomFilterMenu(cf, $event)"
+            >
+              <i class="ti ti-filter"></i>
+              <span class="custom-filter-name">{{ cf.name }}</span>
+              <button class="custom-filter-menu-btn" @click.stop="openCustomFilterMenu(cf, $event)">
+                <i class="ti ti-dots-vertical"></i>
+              </button>
+            </button>
+          </template>
+
+        </template>
+
+        <!-- Eigene Filter "+" immer sichtbar -->
+        <template v-if="!sidebarStore.effectiveSections.includes('custom_filters') || !sidebarStore.customFilters.length">
+          <p class="nav-section">Eigene Filter</p>
+        </template>
+        <button class="nav-item nav-item-add" @click="openCustomFilterModal(null)">
+          <i class="ti ti-plus"></i>Neuer Filter-Tab
         </button>
+
+        <template v-if="authStore.isAdmin">
+          <p class="nav-section">Verwaltung</p>
+          <button class="nav-item" @click="goAdminQuotes">
+            <i class="ti ti-quote"></i>Zitate
+          </button>
+        </template>
       </template>
     </nav>
 
     <button v-if="showAddBtn" class="add-btn" @click="add">
       <i class="ti ti-book-plus"></i>Neues Rezept
     </button>
-    <button class="logout-btn" @click="goSidebarEdit">
-      <i class="ti ti-settings"></i>Sidebar anpassen
+    <button v-if="editMode" class="logout-btn edit-done-btn" @click="exitEditMode">
+      <i class="ti ti-check"></i>Fertig
     </button>
-    <button class="logout-btn" @click="goProfile">
-      <i class="ti ti-user-circle"></i>Mein Profil
-    </button>
-    <button class="logout-btn" @click="logout">
-      <i class="ti ti-logout"></i>Abmelden
-    </button>
+    <template v-else>
+      <button class="logout-btn" @click="enterEditMode">
+        <i class="ti ti-settings"></i>Sidebar anpassen
+      </button>
+      <button class="logout-btn" @click="goProfile">
+        <i class="ti ti-user-circle"></i>Mein Profil
+      </button>
+      <button class="logout-btn" @click="logout">
+        <i class="ti ti-logout"></i>Abmelden
+      </button>
+    </template>
   </aside>
 
   <!-- Custom Filter Kontextmenü -->
@@ -155,7 +237,6 @@
           <label class="form-label">Name</label>
           <input class="form-input" v-model="filterForm.name" placeholder="z.B. Schnelle Wochentags-Rezepte">
         </div>
-
         <div class="form-group" style="margin:0">
           <label class="form-label">Kategorien</label>
           <div class="custom-filter-checks">
@@ -164,7 +245,6 @@
             </label>
           </div>
         </div>
-
         <div class="form-group" style="margin:0">
           <label class="form-label">Saison</label>
           <div class="custom-filter-checks">
@@ -173,7 +253,6 @@
             </label>
           </div>
         </div>
-
         <div class="form-group" style="margin:0">
           <label class="form-label">Tags</label>
           <div class="modal-tag-group">
@@ -185,7 +264,6 @@
             >{{ t }}</button>
           </div>
         </div>
-
         <label class="filter-opt">
           <input type="checkbox" v-model="filterForm.favorites_only"> Nur Favoriten
         </label>
@@ -199,8 +277,8 @@
     </div>
   </div>
 
-  <!-- "Als Tab speichern" Toast-Link (erscheint wenn aktive Filter vorhanden) -->
-  <div v-if="showSaveFilterHint && !filterModalOpen" class="save-filter-hint" @click="saveCurrentAsFilter">
+  <!-- "Als Tab speichern" Hint -->
+  <div v-if="showSaveFilterHint && !filterModalOpen && !editMode" class="save-filter-hint" @click="saveCurrentAsFilter">
     <i class="ti ti-filter-plus"></i> Filterkombination als Tab speichern
   </div>
 </template>
@@ -208,9 +286,10 @@
 <script setup>
 import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import Draggable from 'vuedraggable'
 import { useRecipeStore } from '../stores/recipes'
 import { useAuthStore } from '../stores/auth'
-import { useSidebarStore } from '../stores/sidebar'
+import { useSidebarStore, SECTION_LABELS, SIDEBAR_SECTIONS } from '../stores/sidebar'
 import { signOut } from '../lib/supabase'
 
 defineProps({ open: { type: Boolean, default: false } })
@@ -234,6 +313,7 @@ const NO_ADD_VIEWS = ['favorites', 'saved', 'shared']
 const NO_ADD_ROUTES = ['discovery', 'following', 'friends', 'users', 'profile', 'profile-edit']
 
 const showAddBtn = computed(() => {
+  if (editMode.value) return false
   if (NO_ADD_ROUTES.includes(route.name)) return false
   if (route.name === 'grid' && NO_ADD_VIEWS.includes(store.collectionMode)) return false
   return true
@@ -265,8 +345,7 @@ function isCategoryActive(item) {
 
 function isCustomFilterActive(cf) {
   if (route.name !== 'grid') return false
-  // Active if all filter arrays match
-  const eq = (a, b) => a.length === b.length && a.every(v => b.includes(v))
+  const eq = (a, b) => a.length === b.length && [...a].sort().every((v, i) => v === [...b].sort()[i])
   return (
     eq(store.activeCategories, cf.categories || []) &&
     eq(store.activeSeasons, cf.seasons || []) &&
@@ -317,8 +396,7 @@ function applyCustomFilter(cf) {
   store.setCategories(cf.categories || [])
   store.setSeasons(cf.seasons || [])
   store.setTags(cf.tags || [])
-  if (cf.favorites_only) store.setFilter('__fav__')
-  else store.setFilter('')
+  store.setFilter(cf.favorites_only ? '__fav__' : '')
   store.collectionMode = 'all'
   store.adminMode = 'user'
   if (router.currentRoute.value.name !== 'grid') router.push('/')
@@ -329,9 +407,53 @@ function applyCustomFilter(cf) {
 function add() { router.push('/add'); emit('close') }
 function go(path) { router.push(path); emit('close') }
 function goProfile() { if (authStore.username) router.push(`/profile/${authStore.username}`); emit('close') }
-function goSidebarEdit() { router.push('/sidebar/edit'); emit('close') }
 function goAdminQuotes() { router.push('/admin/quotes'); emit('close') }
 async function logout() { await signOut(); router.push('/login'); emit('close') }
+
+// ── Edit Mode (inline drag & drop) ───────────
+
+const editMode = ref(false)
+const editSections = ref([])   // ordered section keys
+const editVisible = reactive({}) // { section: [item, ...] }  — visible, draggable
+const editHidden = reactive({})  // { section: [item, ...] }  — hidden, shown grayed at bottom
+
+function enterEditMode() {
+  editSections.value = [...sidebarStore.effectiveSections]
+  for (const section of SIDEBAR_SECTIONS) {
+    const items = sidebarStore.effectiveItems(section)
+    editVisible[section] = items.filter(i => i.visible).map(i => ({ ...i }))
+    editHidden[section] = items.filter(i => !i.visible).map(i => ({ ...i }))
+  }
+  editMode.value = true
+}
+
+function exitEditMode() {
+  editMode.value = false
+}
+
+async function onItemDragEnd(section) {
+  const allItems = [
+    ...editVisible[section].map((item, i) => ({ key: item.key, visible: true, sort_order: i })),
+    ...editHidden[section].map((item, i) => ({ key: item.key, visible: false, sort_order: editVisible[section].length + i })),
+  ]
+  await sidebarStore.saveItemsForSection(authStore.userId, section, allItems)
+}
+
+async function onSectionDragEnd() {
+  await sidebarStore.saveSectionOrder(authStore.userId, [...editSections.value])
+}
+
+function hideItem(section, item) {
+  editVisible[section] = editVisible[section].filter(i => i.key !== item.key)
+  editHidden[section].push({ ...item, visible: false })
+  onItemDragEnd(section)
+}
+
+function showItem(section, item) {
+  editHidden[section] = editHidden[section].filter(i => i.key !== item.key)
+  editVisible[section].push({ ...item, visible: true })
+  onItemDragEnd(section)
+}
 
 // ── Custom Filter Modal ───────────────────────
 
@@ -373,11 +495,10 @@ async function saveCustomFilter() {
   filterModalOpen.value = false
 }
 
-// "Als Tab speichern" wenn aktive Filter vorhanden
-const showSaveFilterHint = computed(() => {
-  return route.name === 'grid' &&
-    (store.activeCategories.length || store.activeSeasons.length || store.activeTags.length)
-})
+const showSaveFilterHint = computed(() =>
+  route.name === 'grid' &&
+  (store.activeCategories.length || store.activeSeasons.length || store.activeTags.length)
+)
 
 function saveCurrentAsFilter() {
   openCustomFilterModal(null)
