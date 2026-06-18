@@ -1204,9 +1204,9 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 .nav-item-wrap:hover .nav-opts-btn { max-width: 28px; padding: 0 6px; opacity: 1; background: var(--warm-pale); color: var(--muted); }
 .nav-opts-btn:hover { background: var(--warm-mid) !important; color: var(--ink); }
 .nav-item-wrap:hover .nav-item:not(.active) { background: var(--warm-pale); color: var(--ink); }
-/* active: always expanded for pill, icon transparent until hover */
-.nav-item-wrap:has(.nav-item.active) .nav-opts-btn { max-width: 28px; padding: 0 6px; opacity: 1; background: var(--primary-pale); color: transparent; }
-.nav-item-wrap:has(.nav-item.active):hover .nav-opts-btn { background: var(--primary-pale); color: var(--primary-dark); }
+/* active: thin right cap (pill complete) — expands to full on hover */
+.nav-item-wrap:has(.nav-item.active) .nav-opts-btn { max-width: 8px; padding: 0; opacity: 1; background: var(--primary-pale); color: transparent; overflow: hidden; }
+.nav-item-wrap:has(.nav-item.active):hover .nav-opts-btn { max-width: 28px; padding: 0 6px; background: var(--primary-pale); color: var(--primary-dark); }
 .nav-item-wrap:has(.nav-item.active) .nav-opts-btn:hover { background: var(--primary-mid); color: var(--primary-dark); }
 
 .nav-section-row { display: flex; align-items: center; justify-content: space-between; }
