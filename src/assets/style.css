@@ -1194,16 +1194,20 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 }
 .nav-opts-btn {
   flex-shrink: 0; background: none; border: none; cursor: pointer;
-  padding: 0 6px; color: var(--muted); border-radius: 0 var(--radius) var(--radius) 0;
-  opacity: 0; transition: opacity .15s, background .12s; line-height: 1; font-size: 14px;
-  display: flex; align-items: center;
+  color: var(--muted); border-radius: 0 var(--radius) var(--radius) 0;
+  line-height: 1; font-size: 14px; display: flex; align-items: center;
+  /* collapsed by default — takes no space, count badge stays flush right */
+  max-width: 0; padding: 0; overflow: hidden; opacity: 0;
+  transition: max-width .15s, padding .15s, opacity .15s, background .12s, color .12s;
 }
+/* hover: expand + show */
+.nav-item-wrap:hover .nav-opts-btn { max-width: 28px; padding: 0 6px; opacity: 1; background: var(--warm-pale); color: var(--muted); }
+.nav-opts-btn:hover { background: var(--warm-mid) !important; color: var(--ink); }
 .nav-item-wrap:hover .nav-item:not(.active) { background: var(--warm-pale); color: var(--ink); }
-.nav-item-wrap:hover .nav-opts-btn { opacity: 1; background: var(--warm-pale); color: var(--muted); }
-.nav-item-wrap:has(.nav-item.active) .nav-opts-btn { background: var(--primary-pale); opacity: 1; color: transparent; }
+/* active: always expanded for pill, icon transparent until hover */
+.nav-item-wrap:has(.nav-item.active) .nav-opts-btn { max-width: 28px; padding: 0 6px; opacity: 1; background: var(--primary-pale); color: transparent; }
 .nav-item-wrap:has(.nav-item.active):hover .nav-opts-btn { background: var(--primary-pale); color: var(--primary-dark); }
 .nav-item-wrap:has(.nav-item.active) .nav-opts-btn:hover { background: var(--primary-mid); color: var(--primary-dark); }
-.nav-opts-btn:hover { background: var(--warm-mid) !important; color: var(--ink); }
 
 .nav-section-row { display: flex; align-items: center; justify-content: space-between; }
 .custom-filter-row { display: flex; align-items: center; padding-right: 4px; }

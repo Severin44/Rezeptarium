@@ -118,9 +118,14 @@
                 <i class="ti ti-dots-vertical"></i>
               </button>
             </div>
-            <button v-if="authStore.isAdmin" class="nav-item" :class="{ active: store.adminMode === 'admin' }" @click="selectAdminView">
-              <i class="ti ti-shield-check"></i>Admin: Alle Rezepte
-            </button>
+            <div v-if="authStore.isAdmin" class="nav-item-wrap">
+              <button class="nav-item" :class="{ active: store.adminMode === 'admin' }" @click="selectAdminView">
+                <i class="ti ti-shield-check"></i>Admin: Alle Rezepte
+              </button>
+              <button class="nav-opts-btn" @click.stop="openItemMenu({ key: 'admin' }, 'sammlung', $event)">
+                <i class="ti ti-dots-vertical"></i>
+              </button>
+            </div>
           </template>
 
           <!-- Kapitel -->
@@ -348,6 +353,7 @@ watch(() => authStore.userId, async (id) => {
 function isMainActive(item) {
   if (route.name !== 'grid') return false
   if (store.adminMode === 'admin') return false
+  if (store.activeCategories.length > 0) return false
   return store.collectionMode === item.key
 }
 
