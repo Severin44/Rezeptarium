@@ -1189,7 +1189,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 }
 .nav-item-wrap:hover .nav-item:not(.active) { background: var(--warm-pale); color: var(--ink); }
 .nav-item-wrap:hover .nav-opts-btn { opacity: 1; background: var(--warm-pale); color: var(--muted); }
-.nav-item-wrap:has(.nav-item.active) .nav-opts-btn { background: var(--primary-pale); }
+.nav-item-wrap:has(.nav-item.active) .nav-opts-btn { background: var(--primary-pale); opacity: 1; }
 .nav-item-wrap:has(.nav-item.active):hover .nav-opts-btn { background: var(--primary-pale); }
 .nav-opts-btn:hover { background: var(--warm-mid) !important; color: var(--ink); }
 
