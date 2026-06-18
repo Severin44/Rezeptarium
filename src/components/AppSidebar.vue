@@ -189,24 +189,28 @@
       </template>
     </nav>
 
-    <button v-if="showAddBtn" class="add-btn" @click="add">
-      <i class="ti ti-book-plus"></i>Neues Rezept
-    </button>
-    <button v-if="editMode" class="logout-btn edit-done-btn" @click="exitEditMode">
-      <i class="ti ti-check"></i>Fertig
-    </button>
-    <template v-else>
-      <button class="logout-btn" @click="enterEditMode">
-        <i class="ti ti-settings"></i>Sidebar anpassen
+    <div class="sidebar-bottom">
+      <button v-if="showAddBtn" class="add-btn" @click="add">
+        <i class="ti ti-book-plus"></i>Neues Rezept
       </button>
-      <button class="logout-btn" @click="goProfile">
-        <i class="ti ti-user-circle"></i>Mein Profil
+      <button v-if="editMode" class="edit-done-btn" @click="exitEditMode">
+        <i class="ti ti-check"></i>Fertig
       </button>
-      <button class="logout-btn" @click="logout">
-        <i class="ti ti-logout"></i>Abmelden
+      <button v-else class="sidebar-more-btn" @click.stop="toggleSettingsMenu" :class="{ active: settingsMenuOpen }">
+        <i class="ti ti-dots"></i>
       </button>
-    </template>
+    </div>
   </aside>
+
+  <!-- Settings Popover -->
+  <Teleport to="body">
+    <div v-if="settingsMenuOpen" class="ctx-backdrop" @click="settingsMenuOpen = false"></div>
+    <div v-if="settingsMenuOpen" class="ctx-menu settings-menu" :style="settingsMenuStyle" @click.stop>
+      <button @click="enterEditMode; settingsMenuOpen = false"><i class="ti ti-settings"></i>Sidebar anpassen</button>
+      <button @click="goProfile; settingsMenuOpen = false"><i class="ti ti-user-circle"></i>Mein Profil</button>
+      <button class="ctx-danger" @click="logout"><i class="ti ti-logout"></i>Abmelden</button>
+    </div>
+  </Teleport>
 
   <!-- Unified Kontextmenü -->
   <div v-if="activeMenu" class="ctx-menu" :style="activeMenuStyle" @click.stop>
@@ -590,6 +594,20 @@ function openItemMenu(item, section, e) {
 }
 
 function closeMenu() { activeMenu.value = null }
+
+// ── Settings Popover ──────────────────────────
+const settingsMenuOpen = ref(false)
+const settingsMenuStyle = ref({})
+
+function toggleSettingsMenu(e) {
+  if (settingsMenuOpen.value) { settingsMenuOpen.value = false; return }
+  const btn = e.currentTarget.getBoundingClientRect()
+  settingsMenuStyle.value = {
+    bottom: `${window.innerHeight - btn.top + 6}px`,
+    left: `${btn.left}px`,
+  }
+  settingsMenuOpen.value = true
+}
 
 async function menuHideItem() {
   const { item, section } = activeMenu.value
