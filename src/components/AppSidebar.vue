@@ -206,8 +206,8 @@
   <Teleport to="body">
     <div v-if="settingsMenuOpen" class="ctx-backdrop" @click="settingsMenuOpen = false"></div>
     <div v-if="settingsMenuOpen" class="ctx-menu settings-menu" :style="settingsMenuStyle" @click.stop>
-      <button @click="enterEditMode; settingsMenuOpen = false"><i class="ti ti-settings"></i>Sidebar anpassen</button>
-      <button @click="goProfile; settingsMenuOpen = false"><i class="ti ti-user-circle"></i>Mein Profil</button>
+      <button @click="() => { settingsMenuOpen = false; enterEditMode() }"><i class="ti ti-settings"></i>Sidebar anpassen</button>
+      <button @click="() => { settingsMenuOpen = false; goProfile() }"><i class="ti ti-user-circle"></i>Mein Profil</button>
       <button class="ctx-danger" @click="logout"><i class="ti ti-logout"></i>Abmelden</button>
     </div>
   </Teleport>
