@@ -1170,6 +1170,22 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 .btn-danger:hover { background: #b06040; }
 
 /* ── Eigene Filter-Tabs in Sidebar ── */
+/* ── Nav item wrapper with ⋮ options button ── */
+.nav-item-wrap {
+  display: flex; align-items: stretch; border-radius: var(--radius);
+}
+.nav-item-wrap .nav-item {
+  flex: 1; border-radius: var(--radius) 0 0 var(--radius);
+}
+.nav-opts-btn {
+  flex-shrink: 0; background: none; border: none; cursor: pointer;
+  padding: 0 6px; color: var(--muted); border-radius: 0 var(--radius) var(--radius) 0;
+  opacity: 0; transition: opacity .15s, background .12s; line-height: 1; font-size: 14px;
+  display: flex; align-items: center;
+}
+.nav-item-wrap:hover .nav-opts-btn { opacity: 1; }
+.nav-opts-btn:hover { background: var(--border); color: var(--ink); opacity: 1; }
+
 .nav-section-row { display: flex; align-items: center; justify-content: space-between; }
 .custom-filter-row { display: flex; align-items: center; padding-right: 4px; }
 .custom-filter-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

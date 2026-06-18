@@ -109,19 +109,16 @@
           <!-- Sammlung -->
           <template v-if="section === 'sammlung' && sidebarStore.visibleItems('sammlung').length">
             <p class="nav-section">Sammlung</p>
-            <button
-              v-for="item in sidebarStore.visibleItems('sammlung')" :key="item.key"
-              class="nav-item" :class="{ active: isMainActive(item) }"
-              @click="selectMainItem(item)"
-            >
-              <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
-              <span v-if="item.key === 'mine'" class="nav-count">{{ store.countMine }}</span>
-            </button>
-            <button
-              v-if="authStore.isAdmin" class="nav-item"
-              :class="{ active: store.adminMode === 'admin' }"
-              @click="selectAdminView"
-            >
+            <div v-for="item in sidebarStore.visibleItems('sammlung')" :key="item.key" class="nav-item-wrap">
+              <button class="nav-item" :class="{ active: isMainActive(item) }" @click="selectMainItem(item)">
+                <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
+                <span v-if="item.key === 'mine'" class="nav-count">{{ store.countMine }}</span>
+              </button>
+              <button class="nav-opts-btn" @click.stop="openItemMenu(item, 'sammlung', $event)">
+                <i class="ti ti-dots-vertical"></i>
+              </button>
+            </div>
+            <button v-if="authStore.isAdmin" class="nav-item" :class="{ active: store.adminMode === 'admin' }" @click="selectAdminView">
               <i class="ti ti-shield-check"></i>Admin: Alle Rezepte
             </button>
           </template>
@@ -129,53 +126,48 @@
           <!-- Kapitel -->
           <template v-if="section === 'kapitel' && sidebarStore.visibleItems('kapitel').length">
             <p class="nav-section">Kapitel</p>
-            <button
-              v-for="item in sidebarStore.visibleItems('kapitel')" :key="item.key"
-              class="nav-item" :class="{ active: isCategoryActive(item) }"
-              @click="selectCategory(item.key.replace('category:', ''))"
-            >
-              <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
-            </button>
+            <div v-for="item in sidebarStore.visibleItems('kapitel')" :key="item.key" class="nav-item-wrap">
+              <button class="nav-item" :class="{ active: isCategoryActive(item) }" @click="selectCategory(item.key.replace('category:', ''))">
+                <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
+              </button>
+              <button class="nav-opts-btn" @click.stop="openItemMenu(item, 'kapitel', $event)">
+                <i class="ti ti-dots-vertical"></i>
+              </button>
+            </div>
           </template>
 
           <!-- Social -->
           <template v-if="section === 'social' && sidebarStore.visibleItems('social').length">
             <p class="nav-section">Social</p>
-            <template v-for="item in sidebarStore.visibleItems('social')" :key="item.key">
-              <button v-if="item.key === 'discovery'" class="nav-item" :class="{ active: route.name === 'discovery' }" @click="go('/discovery')">
-                <i class="ti ti-world"></i>Discovery
+            <div v-for="item in sidebarStore.visibleItems('social')" :key="item.key" class="nav-item-wrap">
+              <button class="nav-item"
+                :class="{ active: isSocialActive(item.key) }"
+                @click="selectSocial(item.key)"
+              >
+                <i :class="`ti ti-${item.icon}`"></i>{{ item.label }}
+                <span v-if="item.key === 'shared' && store.unseenShares" class="nav-badge">{{ store.unseenShares }}</span>
               </button>
-              <button v-else-if="item.key === 'following'" class="nav-item" :class="{ active: route.name === 'following' }" @click="go('/following')">
-                <i class="ti ti-rss"></i>Following
+              <button class="nav-opts-btn" @click.stop="openItemMenu(item, 'social', $event)">
+                <i class="ti ti-dots-vertical"></i>
               </button>
-              <button v-else-if="item.key === 'friends'" class="nav-item" :class="{ active: route.name === 'friends' }" @click="go('/friends')">
-                <i class="ti ti-users-group"></i>Freunde
-              </button>
-              <button v-else-if="item.key === 'users'" class="nav-item" :class="{ active: route.name === 'users' }" @click="go('/users')">
-                <i class="ti ti-search"></i>User suchen
-              </button>
-              <button v-else-if="item.key === 'shared'" class="nav-item" :class="{ active: store.collectionMode === 'shared' && route.name === 'grid' }" @click="selectShared">
-                <i class="ti ti-share"></i>Mit mir geteilt
-                <span v-if="store.unseenShares" class="nav-badge">{{ store.unseenShares }}</span>
-              </button>
-            </template>
+            </div>
           </template>
 
           <!-- Eigene Filter -->
           <template v-if="section === 'custom_filters' && sidebarStore.customFilters.length">
             <p class="nav-section">Eigene Filter</p>
-            <button
-              v-for="cf in sidebarStore.customFilters" :key="cf.id"
-              class="nav-item custom-filter-row" :class="{ active: isCustomFilterActive(cf) }"
-              @click="applyCustomFilter(cf)"
-              @contextmenu.prevent="openCustomFilterMenu(cf, $event)"
-            >
-              <i class="ti ti-filter"></i>
-              <span class="custom-filter-name">{{ cf.name }}</span>
-              <button class="custom-filter-menu-btn" @click.stop="openCustomFilterMenu(cf, $event)">
+            <div v-for="cf in sidebarStore.customFilters" :key="cf.id" class="nav-item-wrap">
+              <button class="nav-item custom-filter-row" :class="{ active: isCustomFilterActive(cf) }"
+                @click="applyCustomFilter(cf)"
+                @contextmenu.prevent="openItemMenu({ key: `custom:${cf.id}`, _cf: cf }, 'custom_filters', $event)"
+              >
+                <i class="ti ti-filter"></i>
+                <span class="custom-filter-name">{{ cf.name }}</span>
+              </button>
+              <button class="nav-opts-btn" @click.stop="openItemMenu({ key: `custom:${cf.id}`, _cf: cf }, 'custom_filters', $event)">
                 <i class="ti ti-dots-vertical"></i>
               </button>
-            </button>
+            </div>
           </template>
 
         </template>
@@ -216,14 +208,19 @@
     </template>
   </aside>
 
-  <!-- Custom Filter Kontextmenü -->
-  <div v-if="menuFilter" class="ctx-menu" :style="menuStyle" @click.stop>
-    <button @click="openCustomFilterModal(menuFilter)"><i class="ti ti-pencil"></i>Bearbeiten</button>
-    <button @click="moveFilter('up')"><i class="ti ti-arrow-up"></i>Nach oben</button>
-    <button @click="moveFilter('down')"><i class="ti ti-arrow-down"></i>Nach unten</button>
-    <button class="ctx-danger" @click="removeFilter"><i class="ti ti-trash"></i>Löschen</button>
+  <!-- Unified Kontextmenü -->
+  <div v-if="activeMenu" class="ctx-menu" :style="activeMenuStyle" @click.stop>
+    <template v-if="activeMenu.type === 'custom'">
+      <button @click="openCustomFilterModal(activeMenu.cf)"><i class="ti ti-pencil"></i>Bearbeiten</button>
+      <button @click="menuMoveFilter('up')"><i class="ti ti-arrow-up"></i>Nach oben</button>
+      <button @click="menuMoveFilter('down')"><i class="ti ti-arrow-down"></i>Nach unten</button>
+    </template>
+    <button @click="menuHideItem"><i class="ti ti-eye-off"></i>Ausblenden</button>
+    <template v-if="activeMenu.type === 'custom'">
+      <button class="ctx-danger" @click="menuRemoveFilter"><i class="ti ti-trash"></i>Löschen</button>
+    </template>
   </div>
-  <div v-if="menuFilter" class="ctx-backdrop" @click="closeMenu"></div>
+  <div v-if="activeMenu" class="ctx-backdrop" @click="closeMenu"></div>
 
   <!-- Custom Filter Modal -->
   <div v-if="filterModalOpen" class="modal-overlay" @click.self="filterModalOpen = false">
@@ -404,6 +401,19 @@ function applyCustomFilter(cf) {
   if (window.innerWidth <= 700) emit('close')
 }
 
+// Social items unified handler
+const SOCIAL_ROUTES = {
+  discovery: '/discovery', following: '/following', friends: '/friends', users: '/users',
+}
+function isSocialActive(key) {
+  if (key === 'shared') return store.collectionMode === 'shared' && route.name === 'grid'
+  return route.name === key
+}
+function selectSocial(key) {
+  if (key === 'shared') { selectShared(); return }
+  go(SOCIAL_ROUTES[key])
+}
+
 function add() { router.push('/add'); emit('close') }
 function go(path) { router.push(path); emit('close') }
 function goProfile() { if (authStore.username) router.push(`/profile/${authStore.username}`); emit('close') }
@@ -507,24 +517,45 @@ function saveCurrentAsFilter() {
   filterForm.tags = [...store.activeTags]
 }
 
-// ── Custom Filter Kontextmenü ─────────────────
+// ── Unified Kontextmenü ───────────────────────
+// activeMenu = { type: 'regular'|'custom', item, section, cf? }
 
-const menuFilter = ref(null)
-const menuStyle = ref({})
+const activeMenu = ref(null)
+const activeMenuStyle = ref({})
 
-function openCustomFilterMenu(cf, e) {
-  menuFilter.value = cf
-  menuStyle.value = { top: `${e.clientY}px`, left: `${e.clientX}px` }
+function openItemMenu(item, section, e) {
+  const isCustom = section === 'custom_filters'
+  activeMenu.value = {
+    type: isCustom ? 'custom' : 'regular',
+    item,
+    section,
+    cf: isCustom ? item._cf : null,
+  }
+  // Position: keep menu on screen
+  const x = Math.min(e.clientX, window.innerWidth - 170)
+  const y = Math.min(e.clientY, window.innerHeight - 150)
+  activeMenuStyle.value = { top: `${y}px`, left: `${x}px` }
 }
-function closeMenu() { menuFilter.value = null }
-async function removeFilter() {
-  if (!menuFilter.value) return
-  await sidebarStore.removeCustomFilter(menuFilter.value.id)
+
+function closeMenu() { activeMenu.value = null }
+
+async function menuHideItem() {
+  const { item, section } = activeMenu.value
+  await sidebarStore.hideItem(authStore.userId, section, item.key)
   closeMenu()
 }
-async function moveFilter(dir) {
-  if (!menuFilter.value) return
-  await sidebarStore.moveCustomFilter(authStore.userId, menuFilter.value.id, dir)
+
+async function menuRemoveFilter() {
+  const { cf } = activeMenu.value
+  if (!cf) return
+  await sidebarStore.removeCustomFilter(cf.id)
+  closeMenu()
+}
+
+async function menuMoveFilter(dir) {
+  const { cf } = activeMenu.value
+  if (!cf) return
+  await sidebarStore.moveCustomFilter(authStore.userId, cf.id, dir)
   closeMenu()
 }
 </script>

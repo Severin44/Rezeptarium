@@ -140,6 +140,14 @@ export const useSidebarStore = defineStore('sidebar', {
       this.customFilters = this.customFilters.filter(f => f.id !== id)
     },
 
+    async hideItem(userId, section, itemKey) {
+      const items = this.effectiveItems(section)
+      const updated = items.map((item, i) => ({
+        key: item.key, visible: item.key === itemKey ? false : item.visible, sort_order: i,
+      }))
+      await this.saveItemsForSection(userId, section, updated)
+    },
+
     async moveCustomFilter(userId, id, direction) {
       const list = [...this.customFilters]
       const idx = list.findIndex(f => f.id === id)
