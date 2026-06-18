@@ -5,9 +5,7 @@
         <i class="ti ti-menu-2"></i>
       </button>
       <span class="mobile-title"><em>Rezeptarium</em></span>
-      <button class="mobile-add-btn" aria-label="Rezept hinzufügen" @click="router.push('/add')">
-        <i class="ti ti-plus"></i>
-      </button>
+      <div style="width:36px"></div>
     </header>
 
     <div class="sidebar-overlay" :class="{ show: sidebarOpen }" @click="sidebarOpen = false"></div>
@@ -17,6 +15,10 @@
     <main class="main">
       <router-view />
     </main>
+
+    <button class="mobile-fab" aria-label="Rezept hinzufügen" @click="router.push('/add')">
+      <i class="ti ti-plus"></i>
+    </button>
   </div>
 
   <router-view v-else />

@@ -118,9 +118,6 @@
                 <i class="ti ti-dots-vertical"></i>
               </button>
             </div>
-            <button v-if="authStore.isAdmin" class="nav-item" :class="{ active: store.adminMode === 'admin' }" @click="selectAdminView">
-              <i class="ti ti-shield-check"></i>Admin: Alle Rezepte
-            </button>
           </template>
 
           <!-- Kapitel -->
@@ -182,9 +179,22 @@
 
         <template v-if="authStore.isAdmin">
           <p class="nav-section">Verwaltung</p>
-          <button class="nav-item" @click="goAdminQuotes">
-            <i class="ti ti-quote"></i>Zitate
-          </button>
+          <div class="nav-item-wrap">
+            <button class="nav-item" :class="{ active: store.adminMode === 'admin' }" @click="selectAdminView">
+              <i class="ti ti-shield-check"></i>Alle Rezepte
+            </button>
+            <button class="nav-opts-btn" @click.stop="openItemMenu({ key: 'admin' }, 'sammlung', $event)">
+              <i class="ti ti-dots-vertical"></i>
+            </button>
+          </div>
+          <div class="nav-item-wrap">
+            <button class="nav-item" @click="goAdminQuotes">
+              <i class="ti ti-quote"></i>Zitate
+            </button>
+            <button class="nav-opts-btn" @click.stop="openItemMenu({ key: 'admin-quotes' }, 'sammlung', $event)">
+              <i class="ti ti-dots-vertical"></i>
+            </button>
+          </div>
         </template>
       </template>
     </nav>
@@ -348,6 +358,7 @@ watch(() => authStore.userId, async (id) => {
 function isMainActive(item) {
   if (route.name !== 'grid') return false
   if (store.adminMode === 'admin') return false
+  if (store.activeCategories.length > 0) return false
   return store.collectionMode === item.key
 }
 
