@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.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 }}
+          token: ${{ secrets.RELEASE_PUSH_TOKEN }}
 
       - name: Configure Git
         run: |
