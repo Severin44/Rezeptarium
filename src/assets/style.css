@@ -604,6 +604,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 .sidebar-close  { display: none; }
 .sidebar-overlay { display: none; }
 .mobile-only { display: none; }
+.mobile-fab { display: none; }
 
 /* ── Filter Modal ── */
 .filter-modal-overlay {
@@ -706,12 +707,16 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
     font-size: 18px; color: var(--ink);
   }
   .mobile-title em { font-style: italic; color: var(--warm-dark); }
-  .mobile-add-btn {
-    width: 36px; height: 36px;
-    display: flex; align-items: center; justify-content: center;
+  .mobile-fab {
+    position: fixed; bottom: 24px; right: 20px; z-index: 250;
+    width: 52px; height: 52px; border-radius: 50%;
     background: var(--warm-dark); color: #f8f6f0;
-    border: none; border-radius: var(--radius); cursor: pointer; font-size: 18px;
+    border: none; cursor: pointer; font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,.22);
+    transition: background .15s, transform .15s;
   }
+  .mobile-fab:hover { background: var(--ink); transform: scale(1.07); }
 
   /* Sidebar als Drawer */
   .sidebar {

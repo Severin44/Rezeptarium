@@ -72,9 +72,6 @@
         <span>{{ filterModalLabel }}</span>
       </button>
 
-      <button v-if="showAddInline" class="add-btn-inline desktop-only" @click="router.push('/add')">
-        <i class="ti ti-book-plus"></i>Eintrag
-      </button>
     </div>
 
     <!-- Filter-Modal (Mobile) -->
