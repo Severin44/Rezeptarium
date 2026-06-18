@@ -7,50 +7,47 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 
 ## [Unreleased]
 
-### Added
-- **Kontextuelle Vorauswahl im Formular**: Klick auf "+ Neues Rezept" aus einer gefilterten View übernimmt aktive Kategorie, Saisons und Tags direkt ins Formular.
-- **Eigene Filter-Tabs** in der Sidebar: User kann benannte Filterkombinationen (Kategorien, Saison, Tags, Favoriten-Flag) als persönliche Tabs speichern, bearbeiten, löschen und umsortieren. Zugriff per Drei-Punkte-Menü oder Rechtsklick. "Als Tab speichern" direkt aus aktiver Filterung.
-- **Kategorien als Mehrfachauswahl-Filter**: Neues Kategorien-Dropdown in der Toolbar (neben Saison/Tags), erlaubt ODER-Verknüpfung mehrerer Kategorien unabhängig von der Sidebar-Auswahl.
-- **Sidebar Customization** (`/sidebar/edit`): Jeder Sidebar-Eintrag (Sammlung, Kapitel, Social) kann ein-/ausgeblendet und innerhalb seiner Sektion umsortiert werden; Sektionsreihenfolge selbst ist ebenfalls anpassbar. Einstellungen werden pro User in Supabase persistiert (`sidebar_layout`, `sidebar_section_order`). "Zurücksetzen" stellt den Default wieder her.
-- DB-Migration `migration_18_custom_filters_sidebar.sql`: Neue Tabellen `custom_filters`, `sidebar_layout`, `sidebar_section_order` mit RLS-Policies.
-
-### Changed
-- Kategorie-Filter in der Sidebar setzt jetzt `activeCategories = [cat]` (statt `activeFilter`) — gleicher State wie das neue Kategorien-Dropdown.
-- "+ Neues Rezept"-Button und Inline-Add-Button ausgeblendet auf Favoriten, Gespeicherte, Mit mir geteilt, Discovery, Following und Friends.
+## [1.3.0] - 2026-06-18
 
 ### Added
-- **Profilseiten** (`/profile/:username`): Avatar (Upload oder Farbwahl), Bio, Follower-/Following-Zähler, Rezepte nach Sichtbarkeit tabulliert.
+- **Profilseiten** (`/profile/:username`): Avatar (Upload oder Farbwahl), Bio, Follower-/Following-Zähler, Rezepte nach Sichtbarkeit tabuliert.
 - **Profil bearbeiten** (`/profile/edit`): Avatar-Upload oder Buchstaben-Avatar mit 6 Farboptionen, Benutzername, Bio (max. 160 Zeichen).
 - **Follow-System**: Nutzern folgen/entfolgen direkt auf Profilseiten und in der User-Suche. Gegenseitiges Folgen = Freunde.
-- **Drei Sichtbarkeits-Stufen**: Privat / Freunde / Öffentlich (ersetzt den alten `is_public`-Toggle). `VisibilityPicker`-Komponente im Formular mit grünem Custom-Radio.
+- **Drei Sichtbarkeits-Stufen**: Privat / Freunde / Öffentlich (ersetzt den alten `is_public`-Toggle). `VisibilityPicker`-Komponente im Formular.
 - **Following-Feed** (`/following`): Öffentliche Rezepte aller gefolgten User.
-- **Freunde-Feed** (`/friends`): Freundes- und öffentliche Rezepte aller gegenseitigen Follower.
+- **Freunde-Feed** (`/friends`): Rezepte aller gegenseitigen Follower.
 - **User suchen** (`/users`): Debounced Username-Suche mit Inline-Follow/Unfollow.
-- **Direktes Rezept-Teilen**: Owner kann Rezept an Freunde (privat) oder alle Follower (öffentlich/Freunde) senden. Share-Modal in Detailansicht, Badge in Sidebar für ungesehene.
-- **Mit mir geteilt** (unter Social in der Sidebar): empfangene Rezepte mit „New"-Badge für noch nicht angesehene. Beim Öffnen wird automatisch als gesehen markiert.
+- **Direktes Rezept-Teilen**: Owner kann Rezept an Freunde (privat) oder alle Follower senden. Share-Modal in Detailansicht, Badge in Sidebar für ungesehene.
+- **Mit mir geteilt** (Social-Sektion): empfangene Rezepte mit „New"-Badge; beim Öffnen automatisch als gesehen markiert.
 - **Favoriten**-Sammlung: eigene Favoriten (`is_favorite`) + fremd gelikte Rezepte zusammen.
+- **Eigene Filter-Tabs** in der Sidebar: benannte Filterkombinationen (Kategorien, Saison, Tags, Favoriten-Flag) speichern, bearbeiten und löschen. „Filterkombination als Tab speichern"-Hint erscheint automatisch bei aktiven Zusatzfiltern; „Filter aktualisieren"-Hint wenn ein bestehender Tab geöffnet und verändert wurde.
+- **Kontextuelle Vorauswahl im Formular**: „Neues Rezept" aus gefilterter View übernimmt aktive Kategorie, Saisons und Tags direkt.
+- **Kategorien als Mehrfachauswahl-Filter**: Kategorien-Dropdown in der Toolbar, ODER-verknüpft, unabhängig von der Sidebar.
+- **Sidebar-Anpassung per Drag & Drop**: Einträge und Sektionen direkt in der Sidebar umsortieren; Einträge ein-/ausblenden. Aktivierung über „Sidebar anpassen" im Einstellungen-Menü. Einstellungen pro User in Supabase persistiert (`sidebar_layout`, `sidebar_section_order`).
+- **Drei-Punkte-Menü auf allen Sidebar-Einträgen**: Reguläre Einträge erhalten „Ausblenden"; eigene Filter-Tabs zusätzlich „Bearbeiten" und „Löschen" (mit Bestätigungsdialog).
 - `UserAvatar`-Komponente: Profilbild oder Buchstaben-Avatar mit Farbhintergrund, Größen sm/md/lg/xl.
-- `UserChip`-Komponente: klickbarer Username-Link mit Hover-Tooltip (Avatar, Bio-Snippet, Anzahl gespeicherter Rezepte von dieser Person).
+- `UserChip`-Komponente: klickbarer Username-Link mit Hover-Tooltip (Avatar, Bio-Snippet, gespeicherte Rezepte).
 - Sichtbarkeits-Chip in der Detailansicht (Schloss / Personen / Welt-Icon).
-- Detailansicht zeigt „aus der Sammlung von [User]" und „Geteilt von [User]" als klickbare `UserChip`s mit Profil-Tooltip.
-- Löschen-Bestätigung als eigenes In-App-Modal (kein nativer Browser-Dialog mehr).
-- Abschnittsüberschriften (`--- Name ---`) in Zubereitung und Tipps & Notizen — gleicher visueller Stil wie bei den Zutaten.
+- Abschnittsüberschriften (`--- Name ---`) in Zubereitung und Tipps & Notizen.
 - Neue `renderNotes()`-Funktion im Parser für strukturierte Notizen-Darstellung.
-- Supabase-Migration `migration_19_profiles_follows_sharing.sql`: `follows`-, `recipe_shares`-Tabellen, `are_friends()`-Funktion, `visibility`-Spalte, Avatar-Storage-Bucket, RLS-Policies.
+- DB-Migrationen: `migration_18_custom_filters_sidebar.sql` (`custom_filters`, `sidebar_layout`, `sidebar_section_order`) und `migration_19_profiles_follows_sharing.sql` (`follows`, `recipe_shares`, `visibility`, Avatar-Storage).
 
 ### Changed
-- Sidebar: Social-Sektion enthält Discovery, Following, Freunde, User suchen, Mit mir geteilt. Buttons "Neues Rezept", "Mein Profil", "Abmelden" fest am unteren Rand.
-- Liken eines fremden Rezepts speichert es automatisch in die Sammlung; Entspeichern entfernt automatisch den Like.
-- Mit mir geteilte Rezepte: Speichern entfernt den Share-Eintrag; Ablehnen (X-Button) entfernt ohne Bestätigungsdialog.
-- Herz & Rating bei eigenen nicht-privaten Rezepten sichtbar aber nicht klickbar; bei privaten Rezepten ausgeblendet. Bei geteilten privaten Rezepten klickbar, aber Zähler erst bei friends/public sichtbar.
-- Placeholder-Text in den Formular-Textareas zeigt die `--- Abschnitt ---` Syntax als Beispiel.
+- Sidebar-Unterrand: „Neues Rezept" immer sichtbar; „Sidebar anpassen", „Mein Profil" und „Abmelden" hinter einem ⋮-Einstellungen-Button als Popover.
+- Inline-„Neues Rezept"-Button in der Grid-View ausgeblendet auf Favoriten, Gespeicherte und Mit mir geteilt.
+- Aktiver Sidebar-Tab vollständig als Pill dargestellt (⋮-Button übernimmt Hintergrundfarbe; Icon nur bei Hover sichtbar).
+- Sidebar-Scrollbar: 1px dünner Strich in Divider-Farbe, kein Hover-Wachsen.
+- Kategorie-Filter in der Sidebar setzt `activeCategories` (statt `activeFilter`).
+- Liken eines fremden Rezepts speichert es automatisch in die Sammlung; Entspeichern entfernt den Like.
+- Mit mir geteilte Rezepte: Speichern entfernt den Share-Eintrag; Ablehnen (X) ohne Bestätigungsdialog.
+- Detailansicht zeigt „aus der Sammlung von [User]" und „Geteilt von [User]" als klickbare `UserChip`s.
+- Placeholder-Text in Formular-Textareas zeigt `--- Abschnitt ---` Syntax als Beispiel.
 
 ### Fixed
-- `onAuthStateChange` Handler war async und verursachte Whitescreen beim Laden — auf synchronen Handler zurückgesetzt.
-- Sidebar-Buttons scrollen nicht mit der Navigation mit (overflow auf Nav verlagert).
+- `onAuthStateChange` Handler war async und verursachte Whitescreen beim Laden.
 - `seen`-Update auf `recipe_shares` schlug wegen fehlender UPDATE-RLS-Policy lautlos fehl.
-- "Alle Rezepte" zeigte öffentliche Rezepte fremder User — zeigt jetzt nur eigene + gespeicherte Rezepte.
-- Count neben "Meine Rezepte" in der Sidebar spiegelte die aktuell angezeigte View statt der echten Anzahl eigener Rezepte.
+- „Alle Rezepte" zeigte öffentliche Rezepte fremder User — zeigt jetzt nur eigene + gespeicherte.
+- Count neben „Meine Rezepte" spiegelte die angezeigte View statt der echten Anzahl eigener Rezepte.
 
 ## [1.2.0]
 
