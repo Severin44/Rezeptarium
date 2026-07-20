@@ -418,6 +418,9 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
 }
 .btn-icon:hover { background: var(--warm-pale); color: var(--ink); }
 .btn-icon.danger:hover { background: #faeae8; color: var(--rose); }
+.btn-icon:disabled { opacity: .5; cursor: default; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin .8s linear infinite; }
 
 .detail-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
 .chip {

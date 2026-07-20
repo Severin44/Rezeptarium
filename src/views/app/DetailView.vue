@@ -27,6 +27,9 @@
             v-if="isOwner" class="btn-icon" title="Mit jemandem teilen" @click="shareModalOpen = true"
           ><i class="ti ti-share"></i></button>
           <button v-if="isOwner" class="btn-icon" title="Bearbeiten" @click="router.push(`/edit/${recipe.id}`)"><i class="ti ti-edit"></i></button>
+          <button class="btn-icon" title="Als PDF herunterladen" :disabled="pdfLoading" @click="downloadPdf">
+            <i :class="pdfLoading ? 'ti ti-loader-2 spin' : 'ti ti-download'"></i>
+          </button>
           <button v-if="isOwner" class="btn-icon danger" title="Löschen" @click="remove"><i class="ti ti-trash"></i></button>
           <button v-if="sharedWithMe" class="btn-icon danger" title="Ablehnen – aus geteilten entfernen" @click="declineShare"><i class="ti ti-x"></i></button>
         </div>
@@ -152,6 +155,8 @@ import {
   shareRecipe, getShareableFollowers, isSharedWithUser, removeShare, markShareSeen,
 } from '../../lib/supabase'
 import { renderIngredients, renderInstructions, renderNotes } from '../../lib/parser'
+// lazy-loaded so jsPDF doesn't bloat the initial bundle
+const exportRecipeToPdf = (...args) => import('../../lib/pdfExport').then(m => m.exportRecipeToPdf(...args))
 import { useRecipeStore } from '../../stores/recipes'
 import { useAuthStore } from '../../stores/auth'
 import { showToast } from '../../lib/toast'
@@ -200,6 +205,7 @@ const sharedByUsername = ref('')
 
 const shareModalOpen = ref(false)
 const deleteModalOpen = ref(false)
+const pdfLoading = ref(false)
 const shareSearch = ref('')
 const shareContacts = ref([])
 const sharedWith = ref(new Set())
@@ -342,6 +348,18 @@ async function declineShare() {
     router.push('/')
   } catch (e) {
     showToast('Fehler beim Entfernen.', 'error')
+  }
+}
+
+async function downloadPdf() {
+  if (pdfLoading.value) return
+  pdfLoading.value = true
+  try {
+    await exportRecipeToPdf(recipe.value)
+  } catch (e) {
+    showToast('PDF konnte nicht erstellt werden.', 'error')
+  } finally {
+    pdfLoading.value = false
   }
 }
 
