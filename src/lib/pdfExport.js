@@ -80,7 +80,10 @@ function ornamentRule(doc, y) {
   doc.line(cx + 4, y, W - MR, y)
 }
 
-export async function exportRecipeToPdf(recipe) {
+// Builds the jsPDF document without saving/downloading it, so callers can
+// either trigger a download (exportRecipeToPdf) or attach it as a file to
+// the native share sheet (getRecipePdfFile).
+async function buildRecipePdf(recipe) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   let y = ML
 
@@ -343,5 +346,16 @@ export async function exportRecipeToPdf(recipe) {
   }
 
   const filename = recipe.name.replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, '').replace(/\s+/g, '_') + '.pdf'
+  return { doc, filename }
+}
+
+export async function exportRecipeToPdf(recipe) {
+  const { doc, filename } = await buildRecipePdf(recipe)
   doc.save(filename)
+}
+
+// Returns the recipe PDF as a File, ready to attach to navigator.share().
+export async function getRecipePdfFile(recipe) {
+  const { doc, filename } = await buildRecipePdf(recipe)
+  return new File([doc.output('blob')], filename, { type: 'application/pdf' })
 }

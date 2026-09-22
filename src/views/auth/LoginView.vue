@@ -53,10 +53,11 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { signIn } from '../../lib/supabase'
 
 const router = useRouter()
+const route = useRoute()
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -67,7 +68,7 @@ async function login() {
   loading.value = true
   try {
     await signIn(email.value.trim(), password.value)
-    router.push('/')
+    router.push(route.query.redirect || '/')
   } catch (e) {
     error.value = 'E-Mail oder Passwort falsch.'
   } finally {
