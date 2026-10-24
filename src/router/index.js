@@ -49,7 +49,7 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const session = await getSession()
-  if (to.meta.requiresAuth && !session) return { name: 'login' }
+  if (to.meta.requiresAuth && !session) return { name: 'login', query: { redirect: to.fullPath } }
   if (session && (to.name === 'login' || to.name === 'register')) return { name: 'grid' }
   if (to.meta.requiresAdmin) {
     const profile = await getProfile(session.user.id)

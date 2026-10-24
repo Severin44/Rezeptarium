@@ -24,9 +24,10 @@
             <i class="ti ti-heart"></i>{{ recipe.is_favorite ? 'Favorit' : 'Favorisieren' }}
           </button>
           <button
-            v-if="isOwner" class="btn-icon" title="Mit jemandem teilen" @click="shareModalOpen = true"
+            class="btn-icon" title="Teilen" @click="shareDialogOpen = true"
           ><i class="ti ti-share"></i></button>
           <button v-if="isOwner" class="btn-icon" title="Bearbeiten" @click="router.push(`/edit/${recipe.id}`)"><i class="ti ti-edit"></i></button>
+          <button v-if="isOwner" class="btn-icon" title="Als PDF herunterladen" :disabled="pdfLoading" @click="downloadPdf"><i :class="pdfLoading ? 'ti ti-loader-2 spin' : 'ti ti-download'"></i></button>
           <button v-if="isOwner" class="btn-icon danger" title="Löschen" @click="remove"><i class="ti ti-trash"></i></button>
           <button v-if="sharedWithMe" class="btn-icon danger" title="Ablehnen – aus geteilten entfernen" @click="declineShare"><i class="ti ti-x"></i></button>
         </div>
@@ -109,11 +110,20 @@
       </div>
     </div>
 
-    <!-- Share Modal -->
+    <!-- Share Dialog (platform-aware) -->
+    <ShareDialog
+      v-if="shareDialogOpen"
+      :recipe="recipe"
+      :is-owner="isOwner"
+      @close="shareDialogOpen = false"
+      @open-rezeptarium-share="shareDialogOpen = false; shareModalOpen = true"
+    />
+
+    <!-- Rezeptarium Share Modal -->
     <div v-if="shareModalOpen" class="modal-overlay" @click.self="shareModalOpen = false">
       <div class="modal">
         <div class="modal-header">
-          <h3>Rezept teilen</h3>
+          <h3>Im Rezeptarium teilen</h3>
           <button class="btn-icon" @click="shareModalOpen = false"><i class="ti ti-x"></i></button>
         </div>
         <div class="modal-body">
@@ -157,6 +167,7 @@ import { useAuthStore } from '../../stores/auth'
 import { showToast } from '../../lib/toast'
 import UserAvatar from '../../components/UserAvatar.vue'
 import UserChip from '../../components/UserChip.vue'
+import ShareDialog from '../../components/ShareDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -198,6 +209,7 @@ const isSaved = ref(false)
 const sharedWithMe = ref(false)
 const sharedByUsername = ref('')
 
+const shareDialogOpen = ref(false)
 const shareModalOpen = ref(false)
 const deleteModalOpen = ref(false)
 const shareSearch = ref('')
@@ -342,6 +354,19 @@ async function declineShare() {
     router.push('/')
   } catch (e) {
     showToast('Fehler beim Entfernen.', 'error')
+  }
+}
+
+const pdfLoading = ref(false)
+async function downloadPdf() {
+  pdfLoading.value = true
+  try {
+    const { exportRecipeToPdf } = await import('../../lib/pdfExport')
+    await exportRecipeToPdf(recipe.value)
+  } catch {
+    showToast('PDF konnte nicht erstellt werden.', 'error')
+  } finally {
+    pdfLoading.value = false
   }
 }
 

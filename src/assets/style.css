@@ -1358,3 +1358,46 @@ body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-seri
   transition: opacity .15s;
 }
 .edit-done-btn:hover { opacity: .88; }
+
+/* ── Spin animation ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin .7s linear infinite; }
+
+/* ── Share Dialog ── */
+.share-dialog .modal-header { border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 0; }
+.share-dialog-options { display: flex; flex-direction: column; }
+.share-dialog-opt {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px; border: none; background: none; cursor: pointer;
+  text-align: left; color: var(--ink); transition: background .12s;
+  border-bottom: 1px solid var(--border);
+}
+.share-dialog-opt:last-child { border-bottom: none; }
+.share-dialog-opt:hover { background: var(--hover); }
+.share-dialog-opt:disabled { opacity: .5; cursor: default; }
+.share-opt-icon {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--warm-pale); color: var(--warm-dark);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.share-opt-label { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.share-opt-sub { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+.share-opt-url { font-family: monospace; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 260px; }
+.share-opt-warn { color: var(--warm-dark); display: flex; align-items: center; gap: 4px; }
+
+/* Mobile bottom-sheet variant */
+.share-dialog--sheet {
+  position: fixed !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
+  top: auto !important; transform: none !important; margin: 0 !important;
+  border-radius: 16px 16px 0 0 !important; max-height: 85dvh; overflow-y: auto;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.share-dialog-cancel {
+  width: calc(100% - 32px); margin: 8px 16px 16px;
+  padding: 12px; border: none; border-radius: var(--radius);
+  background: var(--hover); color: var(--muted);
+  font-size: 14px; font-family: 'Lato', sans-serif; cursor: pointer;
+  transition: background .12s;
+}
+.share-dialog-cancel:hover { background: var(--border); }
