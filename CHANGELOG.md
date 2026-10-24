@@ -7,6 +7,21 @@ und dieses Projekt folgt sinngemäß [Semantic Versioning](https://semver.org/la
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-24
+
+### Added
+- **Rezept als PDF exportieren**: Download eines formatierten Rezept-PDFs direkt aus der Detailansicht (`pdfExport.js`, basiert auf `jspdf`).
+- **Teilen-Dialog** mit plattform-abhängigen Optionen: Bottom-Sheet auf Mobile, Panel auf Desktop, jeweils mit Link kopieren, Mail und PDF-Export. Auf Mobile zusätzlich der native OS-Share-Dialog inkl. PDF-Anhang, wenn `navigator.canShare({ files })` unterstützt wird.
+- Login merkt sich die Ziel-URL und leitet nach der Anmeldung dorthin zurück (z. B. bei geteilten Rezept-Links).
+
+### Changed
+- Mobile: runder schwebender „Neues Rezept"-Button (FAB) unten rechts ersetzt den Header-Button. Desktop: Inline-Add-Button in der Grid-View entfernt, „Neues Rezept" in der Sidebar ist der einzige Einstieg.
+- `jspdf` als echte Dependency in `package.json` deklariert.
+
+### Fixed
+- Admin-Tab in die Verwaltung-Sektion verschoben und im Pill-Design der übrigen Sidebar-Einträge (inkl. ⋮-Button).
+- Zähler in Sidebar-Einträgen sitzt wieder bündig rechts, auch beim aktiven Tab (⋮-Button klappt ein und erst bei Hover auf).
+
 ## [1.3.0] - 2026-06-18
 
 ### Added
